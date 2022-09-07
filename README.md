@@ -87,7 +87,7 @@ nohup uvicorn main:app --host '0.0.0.0' --port 9621 --reload > xiaomu.log &
 
 ```json
 {
-    "res": "比如学习", // 回复内容
+    "res": "比如学习",
     "user_id": "112" 
 }
 ```
