@@ -46,7 +46,32 @@ nohup uvicorn main:app --host '0.0.0.0' --port 9621 --reload > xiaomu.log &
 
 #### 接口格式
 
-请求体示例
+- question是当前用户输入的对话语句
+
+- chat_id是当前会话的id,用户新打开一次对话框会更新一个chat_id
+
+- source是小木自带的 分类器 给用户输入语句分的类，我们的小呆只负责处理“来自图灵机器人"这一类，即闲聊
+
+- dialog_cache是此用户的对话历史
+  - dialog_cache的列表里的每个字典是一次对话记录
+    - final_question是用户的问题/说的话
+    - answers是小木的回复，大部分情况下answers里面只有一个字典，我还没见到多个answer的情况
+
+- user_video_cache是此用户的看视频行为历史
+
+- dialog_cache与user_video_cache的最大长度暂时定为16
+
+* **course_id**，是当前用户所处课程的id, 32服务器收到后可以直接拿它从/data/tsq/MOOCCube2/entities/course.json 里面查course实体的信息
+
+* faq_qa_pairs
+
+  - 里面是一个列表，每个元素是一个字典，形如：{'question': '如何获得认证证书', 'answer': '成绩合格就可‘}
+
+  - 这个列表的长度不会超过6
+
+  - 我们是在小木的服务器上，用学堂的FAQ库和Mooccube的概念库去搜索qa_pair的，很多情况搜不到结果，故列表可能为空
+
+请求体示例:
 
 ```json
 {
