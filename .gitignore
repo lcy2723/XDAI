@@ -1,0 +1,17 @@
+__pycache__/
+*.pt
+*.pyc
+*.jsonl
+.DS_Store
+*.txt
+*.csv
+*venv/
+*.xml
+*.iml
+*.icns
+*.log
+.idea
+*/zh_list
+*/en_list
+!requirements.txt
+!*stopwords_ch.txt
