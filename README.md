@@ -33,7 +33,7 @@ nohup python tools/knowledge/explore.py -t update -fdata/seed_concept.json -i 1 
 部署similarity
 
 ```bash
-bash tools/deploy_sentsim.sh
+nohup bash tools/deploy_sentsim.sh > similarity_server.log &
 ```
 
 ### 部署小木接口
