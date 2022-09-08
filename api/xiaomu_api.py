@@ -41,16 +41,19 @@ def get_reply(request_data: Item):
     agent.sess.history = []
     if source == "来自图灵机器人":
         for dialog_cache in request_data.dialog_cache:
-            if not dialog_cache['final_question']:
-                # 是空字符
+            if not dialog_cache['final_question'] or len(dialog_cache['answers']) < 1:
+                # 历史 是空问题 或者 没有答案 则跳过
                 continue
+            concat_answer = " ".join([answer["message"] for answer in dialog_cache['answers']])
+            if not concat_answer:
+                # 空答案也跳过
+                continue
+            # 一个问题只输出一个答案
             utt_user = UtteranceItem.parse_simple(talker=TalkerType.user, text=dialog_cache['final_question'])
             agent.sess.add_utterance(utt_user)
-            for answer in dialog_cache['answers']:
-                utt_bot = UtteranceItem.parse_simple(talker=TalkerType.bot, text=answer['message'])
-                agent.sess.add_utterance(utt_bot)
-                # 一个问题只输出一个答案
-                break
+            utt_bot = UtteranceItem.parse_simple(talker=TalkerType.bot, text=concat_answer)
+            agent.sess.add_utterance(utt_bot)
+
         content = request_data.question
         utt = UtteranceItem.parse_simple(talker=TalkerType.user, text=content)
         agent.sess.add_utterance(utt)
