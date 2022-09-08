@@ -58,8 +58,8 @@ class ChatAgent_SP(AgentBase):
         imported_qapairs = self.get_external_retrieved_qapairs()
         query = self.history[-1]
         all_candidates = history_utts + imported_qapairs
-        logger.info("history_utts:{}".format(history_utts))
-        logger.info("all_candidates:{}".format(all_candidates))
+        # logger.info("history_utts:{}".format(history_utts))
+        # logger.info("all_candidates:{}".format(all_candidates))
         if all_candidates:
             sim_res = self.score_prompt_sim(target=query.get("text"), prompt_list=all_candidates)
             candidates_ranking = [
@@ -105,9 +105,7 @@ class ChatAgent_SP(AgentBase):
         return res
 
     def get_chatlog_utterances(self,num):
-        logger.info("self.history:{}".format(self.history))
         history_selected = self.history[-num:-1][::-1]
-        logger.info("history_selected:{}".format(history_selected))
         def process_utt(utt, order=0):
             text = utt.get("text")
             talker = "{botname}" if utt.get("talker") == "bot" else "{username}"
