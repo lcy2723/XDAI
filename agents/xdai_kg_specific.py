@@ -20,7 +20,7 @@ class ChatAgent_SP(AgentBase):
     byemsg = ["和你聊天很愉快，再见~"]
     version = "xdai_glm_sp_domain"
     activate_kw = version
-    concat_turns = 6
+    concat_turns = 7
     background = [
         ("你好", "你好, 我是你的智能学习助理小木~"),
         ("最近怎么样", "还是老样子"),
