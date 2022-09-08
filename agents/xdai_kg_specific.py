@@ -31,7 +31,7 @@ class ChatAgent_SP(AgentBase):
     description = "self-defined-description of the topic" #
     faq_qapairs = []
 
-    def __init__(self, sess_mgr=None, talkername="A"):
+    def __init__(self, sess_mgr=None, talkername="Q"):
         logger.info(f"init class: {self.version}, talker's name:{talkername}")
         super().__init__(sess_mgr=sess_mgr)
         self.username = talkername

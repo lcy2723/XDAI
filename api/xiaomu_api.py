@@ -20,6 +20,11 @@ item.version = 'xdai_glm_sp_domain'
 item.window_info.platform = "term"
 item.window_info.platform_id = 'xiaomu'
 agent = SessionManagerRam.get_agent_by_brand(item)
+fin = open('/data/tsq/MOOCCube2/entities/course.json', 'r')
+id2about = {}
+for line in fin:
+    course_item = json.loads(line)
+    id2about['id'] = course_item['about']
 
 
 class Item(BaseModel):
@@ -58,12 +63,7 @@ def get_reply(request_data: Item):
         utt = UtteranceItem.parse_simple(talker=TalkerType.user, text=content)
         agent.sess.add_utterance(utt)
         agent.import_history()
-        course_info = ''
-        with open('/data/tsq/MOOCCube2/entities/course.json', 'r') as f:
-            for line in f:
-                course_item = json.loads(line)
-                if course_item['id'] == request_data.course_id:
-                    course_info = course_item['about']
+        course_info = id2about[request_data.course_id]
         replies = asyncio.run(agent.make_reply(courseinfo=course_info, qapairs=request_data.faq_qa_pairs))
         for rep in replies:
             utt = UtteranceItem.parse_simple(talker=TalkerType.bot, text=rep)
