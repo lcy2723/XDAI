@@ -24,7 +24,7 @@ fin = open('/data/tsq/MOOCCube2/entities/course.json', 'r')
 id2about = {}
 for line in fin:
     course_item = json.loads(line)
-    id2about['id'] = course_item['about']
+    id2about[course_item['id']] = course_item['about']
 
 
 class Item(BaseModel):
