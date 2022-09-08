@@ -9,7 +9,7 @@ sys.path.append(str(BASE_DIR))
 print(BASE_DIR)
 from module.session_managers.session_manager_ram import SessionManagerRam
 from database.data_types import UtteranceItem
-from database.models import TalkerType,GetSessInfo
+from database.models import TalkerType, GetSessInfo
 import asyncio
 
 import argparse
@@ -41,11 +41,16 @@ def get_reply(request_data: Item):
     agent.sess.history = []
     if source == "来自图灵机器人":
         for dialog_cache in request_data.dialog_cache:
+            if not dialog_cache['final_question']:
+                # 是空字符
+                continue
             utt_user = UtteranceItem.parse_simple(talker=TalkerType.user, text=dialog_cache['final_question'])
             agent.sess.add_utterance(utt_user)
             for answer in dialog_cache['answers']:
                 utt_bot = UtteranceItem.parse_simple(talker=TalkerType.bot, text=answer['message'])
                 agent.sess.add_utterance(utt_bot)
+                # 一个问题只输出一个答案
+                break
         content = request_data.question
         utt = UtteranceItem.parse_simple(talker=TalkerType.user, text=content)
         agent.sess.add_utterance(utt)
