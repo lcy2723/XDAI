@@ -14,8 +14,8 @@ import math
 logger = get_logger("XDAI")
 
 class ChatAgent_SP(AgentBase):
-    botname = "B"
-    username = "A"
+    botname = "A"
+    username = "Q"
     close_kw = ["bye"]
     byemsg = ["和你聊天很愉快，再见~"]
     version = "xdai_glm_sp_domain"
