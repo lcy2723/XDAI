@@ -58,7 +58,7 @@ class ChatAgent_SP(AgentBase):
         imported_qapairs = self.get_external_retrieved_qapairs()
         query = self.history[-1]
         all_candidates = history_utts + imported_qapairs
-        # logger.info("history_utts:{}".format(history_utts))
+        logger.info("history_utts:{}".format(history_utts))
         # logger.info("all_candidates:{}".format(all_candidates))
         if all_candidates:
             sim_res = self.score_prompt_sim(target=query.get("text"), prompt_list=all_candidates)
@@ -106,8 +106,9 @@ class ChatAgent_SP(AgentBase):
         return res
 
     def get_chatlog_utterances(self,num):
-        history_selected = self.history[-num:-1][::-1]
-        def process_utt(utt, order=0):
+        history_selected = self.history[-num-1:-1][::-1]
+        """
+         def process_utt(utt, order=0):
             text = utt.get("text")
             talker = "{botname}" if utt.get("talker") == "bot" else "{username}"
             w = 1 + math.exp(-0.2 * order)
@@ -117,6 +118,28 @@ class ChatAgent_SP(AgentBase):
         history_utts = [
             process_utt(doc, order=i) for i, doc in enumerate(history_selected)
         ]
+        """
+        his_turn = len(history_selected) // 2
+        history_utts = []
+        for i in range(his_turn):
+            try:
+                if history_selected[i*2]['is_bot'] and not history_selected[i*2+1]['is_bot']:
+                    question = history_selected[i*2+1].get("text")
+                    talker_1 = history_selected[i*2+1].get("talker")
+                    talker_1_str = "{botname}" if talker_1 == "bot" else "{username}"
+                    answer = history_selected[i*2].get("text")
+                    talker_2 = history_selected[i*2].get("talker")
+                    talker_2_str = "{botname}" if talker_2 == "bot" else "{username}"
+                    w = 1 + math.exp(-0.2 * i)
+                    res = {
+                        "text": f"{talker_1_str}:{question}|{talker_2_str}:{answer}",
+                        "q": question,
+                        "a": answer,
+                        "weight": w
+                    }
+                    history_utts.append(res)
+            except KeyError:
+                continue
         return history_utts
 
     def __get_conversational_cold_start(self):
