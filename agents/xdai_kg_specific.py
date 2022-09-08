@@ -20,7 +20,7 @@ class ChatAgent_SP(AgentBase):
     byemsg = ["和你聊天很愉快，再见~"]
     version = "xdai_glm_sp_domain"
     activate_kw = version
-    concat_turns = 7
+    concat_turns = 6
     background = [
         ("你好", "你好, 我是你的智能学习助理小木~"),
         ("最近怎么样", "还是老样子"),
@@ -84,6 +84,7 @@ class ChatAgent_SP(AgentBase):
             target = self.history[-1].get("text")
         target = target.replace("{botname}:", "").replace("{username}:", "")
         text_list = []
+        logger.info("prompt_list: {}".format(prompt_list))
         for item in prompt_list:
             if isinstance(item, dict):
                 q = item.get("q", "")
