@@ -41,7 +41,7 @@ nohup bash tools/deploy_sentsim.sh > similarity_server.log &
 在XDAI/api目录下，运行
 
 ```bash
-nohup uvicorn main:app --host '0.0.0.0' --port 9621 --reload > xiaomu.log &
+nohup uvicorn xiaomu_api:app --host '0.0.0.0' --port 9621 --reload > xiaomu.log &
 ```
 
 #### 接口格式

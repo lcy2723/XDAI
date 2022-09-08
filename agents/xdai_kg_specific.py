@@ -58,6 +58,7 @@ class ChatAgent_SP(AgentBase):
         imported_qapairs = self.get_external_retrieved_qapairs()
         query = self.history[-1]
         all_candidates = history_utts + imported_qapairs
+        logger.info("all_candidates:{}".format(all_candidates))
         if all_candidates:
             sim_res = self.score_prompt_sim(target=query.get("text"), prompt_list=all_candidates)
             candidates_ranking = [
@@ -68,7 +69,7 @@ class ChatAgent_SP(AgentBase):
             sorted_prompts = [i[0] for i in sorted_prompts][-12:]
         else:
             sorted_prompts = []
-
+        logger.info("sorted_prompts:{}".format(sorted_prompts))
         sorted_prompts.append("{username}"+":{}".format(query.get("text")))
         sorted_prompts.append("{botname}:")
         concat_text = "|".join(sorted_prompts)
@@ -169,7 +170,7 @@ class ChatAgent_SP(AgentBase):
             qapirs = func()
             qapirs = [merged(item, w) for item in qapirs]
             all_pairs.extend(qapirs)
-            print(k, v, qapirs)
+            # print(k, v, qapirs)
 
         return all_pairs
 
