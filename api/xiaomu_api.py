@@ -38,6 +38,7 @@ class Item(BaseModel):
     user_video_cache: list = None
     course_id: str = None
     faq_qa_pairs: list = None
+    complex_qa_args: dict = None
 
 
 @app.post('/test')
@@ -64,7 +65,8 @@ def get_reply(request_data: Item):
         agent.sess.add_utterance(utt)
         agent.import_history()
         course_info = id2about[request_data.course_id]
-        replies = asyncio.run(agent.make_reply(courseinfo=course_info, qapairs=request_data.faq_qa_pairs))
+        replies = asyncio.run(agent.make_reply(courseinfo=course_info, qapairs=request_data.faq_qa_pairs,
+                                               complex_qa_args=request_data.complex_qa_args))
         for rep in replies:
             utt = UtteranceItem.parse_simple(talker=TalkerType.bot, text=rep)
             agent.sess.add_utterance(utt)
