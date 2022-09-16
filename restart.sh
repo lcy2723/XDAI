@@ -7,14 +7,14 @@ then
     glmapipid=$(echo ${checkglmapi} | cut -d ' ' -f 2)
     echo ${glmapipid}
     searchglm=$(ps -ef | grep ${glmapipid} | grep -v "grep")
-    checkglm=$(echo ${searchglm} | grep "/home/tsq/miniconda3/envs/xdai/bin/python2 -c from multiprocessing") #查找glm server process
+    checkglm=$(echo ${searchglm} | grep "/home/tsq/miniconda3/envs/xdai/bin/python -c from multiprocessing") #查找glm server process
     if [ "$checkglm" ] # 经常出现的问题是reloader process仍然运行但是glm server停止，因此需要检查两次
     then
         echo "glm存在"
     else
         echo "glm不存在"
         kill -9 ${glmapipid} # 先杀掉reloader process再重启，不然uvicorn会出现address already in use错误
-        conda activate xdai # 直接运行会有问题，需要conda activate命令路径
+        source /home/tsq/miniconda3/bin/activate xdai
         date # 显示问题日期
         glmlogdate=$(echo $(date) | cut -d ' ' -f 3)
         cd /home/tsq/user/lcy/XDAI
@@ -22,7 +22,7 @@ then
 fi
 else
     echo "glmapi进程不存在"
-    conda activate xdai # 直接运行会有问题，需要conda activate命令路径
+    source /home/tsq/miniconda3/bin/activate xdai
     date # 显示问题日期
     glmlogdate=$(echo $(date) | cut -d ' ' -f 3)
     cd /home/tsq/user/lcy/XDAI
@@ -41,7 +41,7 @@ then
     else
         echo "sen不存在"
         kill -9 ${senapipid} # 先杀掉reloader process再重启，不然uvicorn会出现address already in use错误
-        conda activate xdai # 直接运行会有问题，需要conda activate命令具体路径
+        source /home/tsq/miniconda3/bin/activate xdai
         date # 显示问题日期
         senlogdate-$(echo $(date) | cut -d ' ' -f 3)
         cd /home/tsq/user/lcy/XDAI
@@ -49,7 +49,7 @@ then
     fi
 else
     echo "sentsimapi进程不存在"
-    conda activate xdai # 直接运行会有问题，需要conda activate命令路径
+    source /home/tsq/miniconda3/bin/activate xdai
     date # 显示问题日期
     senlogdate-$(echo $(date) | cut -d ' ' -f 3)
     cd /home/tsq/user/lcy/XDAI
