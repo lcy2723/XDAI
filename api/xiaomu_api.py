@@ -50,7 +50,7 @@ def get_reply(request_data: Item):
             if not dialog_cache['final_question'] or len(dialog_cache['answers']) < 1:
                 # 历史 是空问题 或者 没有答案 则跳过
                 continue
-            concat_answer = " ".join([answer["message"] for answer in dialog_cache['answers']])
+            concat_answer = "".join([answer["message"] for answer in dialog_cache['answers']])
             if not concat_answer:
                 # 空答案也跳过
                 continue
