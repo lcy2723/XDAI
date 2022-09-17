@@ -37,7 +37,7 @@ then
     echo ${senapipid}
     searchsen=$(ps -ef | grep ${senapipid} | grep -v "grep")
     checksen=$(echo ${searchsen} | grep "/home/tsq/miniconda3/envs/xdai/bin/python -c from multiprocessing")
-    if [ "checksen" ]
+    if [ "$checksen" ]
     then
         echo "sen存在"
     else
