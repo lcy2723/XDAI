@@ -47,7 +47,7 @@ class ChatAgent_SP(AgentBase):
         self.complex_qa_args = kwargs.get('complex_qa_args', {})
         if mode in [UtterranceMode.normal, UtterranceMode.activate]:
             num = self.concat_turns
-            prompt = self.get_concat_history(num)
+            prompt = self.get_concat_history(num)[:896]
             logger.info(f"[selected prompt]:\n{prompt}")
             raw_generated_contents = await getGeneratedText(prompt, limit=30, batchsize=1, model=self.model)
             for text in raw_generated_contents:
