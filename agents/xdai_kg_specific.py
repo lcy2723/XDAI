@@ -82,8 +82,8 @@ class ChatAgent_SP(AgentBase):
         concat_text = concat_text.format(botname=self.botname, username=self.username)
         concat_text = self.description + " " + concat_text
         # shorten the context
-        shorten_concat_text = concat_text[:896]
-        concat_text = shorten_concat_text + "|{}:{}|{}:".format(self.botname, query.get("text"), self.username)
+        shorten_concat_text = concat_text[:480]
+        concat_text = shorten_concat_text + "|{}:{}|{}:".format(self.username, query.get("text"), self.botname)
         # maybe in the future, we will preset the answer's start words
         return concat_text
 
