@@ -47,7 +47,7 @@ class ChatAgent_SP(AgentBase):
         self.complex_qa_args = kwargs.get('complex_qa_args', {})
         if mode in [UtterranceMode.normal, UtterranceMode.activate]:
             num = self.concat_turns
-            prompt = self.get_concat_history(num)[:896]
+            prompt = self.get_concat_history(num)
             logger.info(f"[selected prompt]:\n{prompt}")
             raw_generated_contents = await getGeneratedText(prompt, limit=30, batchsize=1, model=self.model)
             for text in raw_generated_contents:
@@ -76,11 +76,15 @@ class ChatAgent_SP(AgentBase):
         else:
             sorted_prompts = []
         logger.info("sorted_prompts:{}".format(sorted_prompts))
-        sorted_prompts.append("{username}" + ":{}".format(query.get("text")))
-        sorted_prompts.append("{botname}:")
+        # sorted_prompts.append("{username}" + ":{}".format(query.get("text")))
+        # sorted_prompts.append("{botname}:")
         concat_text = "|".join(sorted_prompts)
         concat_text = concat_text.format(botname=self.botname, username=self.username)
         concat_text = self.description + " " + concat_text
+        # shorten the context
+        shorten_concat_text = concat_text[:896]
+        concat_text = shorten_concat_text + "|{}:{}|{}:".format(self.botname, query.get("text"), self.username)
+        # maybe in the future, we will preset the answer's start words
         return concat_text
 
     def score_prompt_sim(self, target="", prompt_list=[]):
