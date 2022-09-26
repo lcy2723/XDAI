@@ -35,6 +35,7 @@ class ChatAgent_SP(AgentBase):
     description = "self-defined-description of the topic"  #
     faq_qapairs = []
     complex_qa_args = {}
+    q_type = ""
 
     def __init__(self, sess_mgr=None, talkername="Q"):
         logger.info(f"init class: {self.version}, talker's name:{talkername}")
@@ -45,6 +46,7 @@ class ChatAgent_SP(AgentBase):
         self.description = kwargs.get('courseinfo', "self-defined-description of the topic")
         self.faq_qapairs = kwargs.get('qapairs', [])
         self.complex_qa_args = kwargs.get('complex_qa_args', {})
+        self.q_type = kwargs.get('q_type', '')
         if mode in [UtterranceMode.normal, UtterranceMode.activate]:
             num = self.concat_turns
             prompt = self.get_concat_history(num)
@@ -82,9 +84,18 @@ class ChatAgent_SP(AgentBase):
         concat_text = concat_text.format(botname=self.botname, username=self.username)
         concat_text = self.description + " " + concat_text
         # shorten the context
-        shorten_concat_text = concat_text[:480]
-        concat_text = shorten_concat_text + "|{}:{}|{}:".format(self.username, query.get("text"), self.botname)
-        # maybe in the future, we will preset the answer's start words
+        shorten_concat_text = concat_text[:900]
+        if self.complex_qa_args:
+            # we will preset the answer's start words with concept definition
+            concept_qapairs = self.__get_faq_qa()
+            concept_text = " ".join([concept_qapair['a'] for concept_qapair in concept_qapairs])
+            concat_text = shorten_concat_text + "|{}:{}|{}:{}所以{}".format(self.username, query.get("text"),
+                                                                           self.botname,
+                                                                           concept_text, query.get("text"))
+
+        else:
+            concat_text = shorten_concat_text + "|{}:{}|{}:".format(self.username, query.get("text"), self.botname)
+
         return concat_text
 
     def score_prompt_sim(self, target="", prompt_list=[]):
@@ -180,6 +191,13 @@ class ChatAgent_SP(AgentBase):
         for qapair in self.faq_qapairs:
             qapair['q'] = qapair.pop('question')
             qapair['a'] = qapair.pop('answer')
+            if self.complex_qa_args:
+                # For complex_qa, we only need concepts
+                if '\n' in qapair['a']:
+                    pure_explain = qapair['a'].split('\n')[0]
+                    qapair['a'] = pure_explain
+                else:
+                    continue
             qapairs.append(qapair)
         logger.info("faq result:{}".format(qapairs))
         return qapairs
@@ -194,18 +212,24 @@ class ChatAgent_SP(AgentBase):
             else:
                 # dynamic choose type
                 # TODO
-                qa_examples = []
+                qa_examples = complex_type2qa_examples[self.q_type]
+                qapairs = qa_examples[:8]
         logger.info("CoT result:{}".format(qapairs))
         return qapairs
 
     def get_external_retrieved_qapairs(self):
         ###
-        SourceDict = {
-            "coldstart": (self.__get_conversational_cold_start, 0.1),
-            "xlore": (self.__get_faq_qa, 0.5),
-            "CoT": (self.__get_cot_qa, 0.8),
-        }
 
+        if self.complex_qa_args:
+            SourceDict = {
+                "CoT": (self.__get_cot_qa, 0.8),
+            }
+        else:
+            SourceDict = {
+                "coldstart": (self.__get_conversational_cold_start, 0.1),
+                "xlore": (self.__get_faq_qa, 0.5),
+                "CoT": (self.__get_cot_qa, 0.8),
+            }
         all_pairs = []
 
         def merged(item, weight):
