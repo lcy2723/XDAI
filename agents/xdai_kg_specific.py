@@ -49,11 +49,12 @@ class ChatAgent_SP(AgentBase):
         self.q_type = kwargs.get('q_type', '')
         if mode in [UtterranceMode.normal, UtterranceMode.activate]:
             num = self.concat_turns
-            prompt = self.get_concat_history(num)
+            prompt, concept_text = self.get_concat_history(num)
             logger.info(f"[selected prompt]:\n{prompt}")
             raw_generated_contents = await getGeneratedText(prompt, limit=30, batchsize=1, model=self.model)
             for text in raw_generated_contents:
                 reply = filter_glm(text, split="|", prefix=f"({self.botname}:|{self.username}:)")
+            reply = concept_text + reply
             logger.info(f"reply:{reply}")
             return [reply]
 
@@ -85,18 +86,22 @@ class ChatAgent_SP(AgentBase):
         concat_text = self.description + " " + concat_text
         # shorten the context
         shorten_concat_text = concat_text[:900]
+        concept_text = ""
         if self.complex_qa_args:
             # we will preset the answer's start words with concept definition
             concept_qapairs = self.__get_faq_qa()
-            concept_text = " ".join([concept_qapair['a'] for concept_qapair in concept_qapairs])
-            concat_text = shorten_concat_text + "|{}:{}|{}:{}所以{}".format(self.username, query.get("text"),
-                                                                           self.botname,
-                                                                           concept_text, query.get("text"))
-
+            if concept_qapairs:
+                concept_text = " ".join([concept_qapair['a'] for concept_qapair in concept_qapairs])
+                concept_text = "{}所以{}?答案是".format(concept_text, query.get("text"))
+                concat_text = shorten_concat_text + "|{}:{}|{}:{}".format(self.username, query.get("text"),
+                                                                          self.botname,
+                                                                          concept_text)
+            else:
+                concat_text = shorten_concat_text + "|{}:{}|{}:".format(self.username, query.get("text"), self.botname)
         else:
             concat_text = shorten_concat_text + "|{}:{}|{}:".format(self.username, query.get("text"), self.botname)
 
-        return concat_text
+        return concat_text, concept_text
 
     def score_prompt_sim(self, target="", prompt_list=[]):
         ### prompt_list = [(q,a)]

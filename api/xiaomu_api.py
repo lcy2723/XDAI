@@ -11,7 +11,6 @@ from module.session_managers.session_manager_ram import SessionManagerRam
 from database.data_types import UtteranceItem
 from database.models import TalkerType, GetSessInfo
 import asyncio
-
 import argparse
 
 app = FastAPI()
