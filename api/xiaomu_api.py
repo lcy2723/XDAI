@@ -39,6 +39,7 @@ class Item(BaseModel):
     course_id: str = None
     faq_qa_pairs: list = None
     complex_qa_args: dict = None
+    q_type: str = None
 
 
 @app.post('/test')
