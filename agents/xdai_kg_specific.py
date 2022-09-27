@@ -218,7 +218,7 @@ class ChatAgent_SP(AgentBase):
                 # dynamic choose type
                 # TODO
                 qa_examples = complex_type2qa_examples[self.q_type]
-                qapairs = qa_examples[:8]
+                qapairs = qa_examples[:4]
         logger.info("CoT result:{}".format(qapairs))
         return qapairs
 
@@ -227,6 +227,7 @@ class ChatAgent_SP(AgentBase):
 
         if self.complex_qa_args:
             SourceDict = {
+                "coldstart": (self.__get_conversational_cold_start, 0.1),
                 "CoT": (self.__get_cot_qa, 0.8),
             }
         else:

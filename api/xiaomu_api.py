@@ -13,6 +13,7 @@ from database.models import TalkerType, GetSessInfo
 import asyncio
 import argparse
 
+
 app = FastAPI()
 item = GetSessInfo()
 item.version = 'xdai_glm_sp_domain'
