@@ -1,5 +1,6 @@
 import json
 import argparse
+import os
 
 
 def observe(args, results):
@@ -27,10 +28,12 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Data for checked QA history on xiaomu')
     parser.add_argument('--size', help='原始数据数量', default=300000)
     parser.add_argument('--show_num', help='打印数据数量', default=5)
+    parser.add_argument('--data_dir', help='数据地址', default='/data/tsq/xiaomu')
     parser.add_argument('--task', help='任务类型', default='observe',
                         choices=['observe', 'draw_distribution'])
     args = parser.parse_args()
-    with open(f'qa_history_{args.size}.json', 'r') as fin:
+    raw_data_path = os.path.join(args.data_dir, f'qa_history_{args.size}.json')
+    with open(raw_data_path, 'r') as fin:
         json_dict = json.load(fin)
     results = json_dict["json_dict"]
     print(f"Total checked QA history num is {len(results)}")
