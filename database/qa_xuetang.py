@@ -35,7 +35,7 @@ if __name__ == '__main__':
     raw_data_path = os.path.join(args.data_dir, f'qa_history_{args.size}.json')
     with open(raw_data_path, 'r') as fin:
         json_dict = json.load(fin)
-    results = json_dict["json_dict"]
+    results = json_dict["results"]
     print(f"Total checked QA history num is {len(results)}")
 
     if args.task == 'observe':
