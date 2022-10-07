@@ -1,5 +1,7 @@
 from pydantic import BaseModel
 from fastapi import FastAPI
+from sentence_transformers import SentenceTransformer
+from sklearn.metrics.pairwise import cosine_similarity
 import sys
 from pathlib import Path
 import json
@@ -25,6 +27,22 @@ id2about = {}
 for line in fin:
     course_item = json.loads(line)
     id2about[course_item['id']] = course_item['about']
+
+
+# 计算问题相似度模块
+modelname = "uer/sbert-base-chinese-nli"
+model = SentenceTransformer(modelname)
+
+
+with open('/home/tsq/user/lcy/sen_sim/qa_data.json', 'r') as f:
+    qa_data = json.load(f)
+# 历史qa对列表
+qa_data = qa_data['qa_data']
+# 历史问题列表
+sentences = []
+for qa_pair in qa_data:
+    sentences.append(qa_pair['q'])
+sentence_embeddings = model.encode(sentences)
 
 
 class Item(BaseModel):
@@ -76,3 +94,17 @@ def get_reply(request_data: Item):
             return res
     else:
         return {"res": "小木只处理来自图灵机器人类", "user_id": request_data.user_id}
+
+
+@app.post('/sen_sim')
+def get_history_answer(request_data: Item):
+    query = [request_data.question]
+    query_embeddings = model.encode(query)
+    # 计算余弦相似度
+    sen_res = cosine_similarity([query_embeddings[0]], sentence_embeddings)
+    sen_res = sen_res[0].tolist()
+    sen_res = zip(range(len(sen_res)), sen_res)
+    # 取相似度最大的作为结果，返回问题及答案
+    res_index = max(sen_res, key=lambda x: x[1])
+    res = {"history_question": qa_data[res_index[0]]['q'], "answer": qa_data[res_index[0]]['a'], "human_ans": qa_data[res_index[0]]['human_a']}
+    return res
