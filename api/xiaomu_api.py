@@ -15,7 +15,6 @@ from database.models import TalkerType, GetSessInfo
 import asyncio
 import argparse
 
-
 app = FastAPI()
 item = GetSessInfo()
 item.version = 'xdai_glm_sp_domain'
@@ -27,7 +26,6 @@ id2about = {}
 for line in fin:
     course_item = json.loads(line)
     id2about[course_item['id']] = course_item['about']
-
 
 # 计算问题相似度模块
 modelname = "uer/sbert-base-chinese-nli"
@@ -56,6 +54,7 @@ class Item(BaseModel):
     user_video_cache: list = None
     course_id: str = None
     faq_qa_pairs: list = None
+    concept_qa_pairs: list = None
     complex_qa_args: dict = None
     q_type: str = None
 
@@ -85,6 +84,7 @@ def get_reply(request_data: Item):
         agent.import_history()
         course_info = id2about[request_data.course_id]
         replies = asyncio.run(agent.make_reply(courseinfo=course_info, qapairs=request_data.faq_qa_pairs,
+                                               concept_qa_pairs=request_data.concept_qa_pairs,
                                                complex_qa_args=request_data.complex_qa_args,
                                                q_type=request_data.q_type))
         for rep in replies:
@@ -106,5 +106,6 @@ def get_history_answer(request_data: Item):
     sen_res = zip(range(len(sen_res)), sen_res)
     # 取相似度最大的作为结果，返回问题及答案
     res_index = max(sen_res, key=lambda x: x[1])
-    res = {"history_question": qa_data[res_index[0]]['q'], "answer": qa_data[res_index[0]]['a'], "human_ans": qa_data[res_index[0]]['human_a']}
+    res = {"history_question": qa_data[res_index[0]]['q'], "answer": qa_data[res_index[0]]['a'],
+           "human_ans": qa_data[res_index[0]]['human_a']}
     return res
