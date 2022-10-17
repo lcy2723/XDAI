@@ -94,6 +94,7 @@ class Config:
         glm_port = self.cf.get(section, "glm_port") or 8888
         glm_url = "http://{ip_address}:{glm_port}/glm".format(ip_address=self.plm_ip,glm_port=glm_port)
         self.glm_query_api = self.cf.get(section, "glm_api") or glm_url
+        self.glm_130b_query_api = self.cf.get(section, "glm_130b_query_api")
         self.default_plm_api = self.glm_query_api
 
     def set_wechaty_token(self):

@@ -4,6 +4,7 @@ from datetime import datetime
 import hashlib
 import re
 
+
 def get_time(stamp=None, form="%Y-%m-%d %H:%M:%S"):
     if not stamp:
         stamp = time.time()
@@ -11,6 +12,7 @@ def get_time(stamp=None, form="%Y-%m-%d %H:%M:%S"):
     now = datetime.fromtimestamp(stamp, tz)
     strt = now.strftime(form)
     return strt, stamp
+
 
 def set_now_time(obj, is_end=False):
     t, stamp = get_time()
@@ -20,7 +22,8 @@ def set_now_time(obj, is_end=False):
     else:
         obj.closed_t = stamp
         obj.closed_time = t
-        
+
+
 def hashidx(org_id):
     data_hash = hashlib.new("md5", org_id.encode("utf8"))
     return data_hash.hexdigest()
@@ -37,7 +40,7 @@ def remove_replicate_secs(text):
     return ",".join(res)
 
 
-def filter_glm(text, prefix ="(BOT:|USER:)",split="|"):
+def filter_glm(text, prefix="(BOT:|USER:)", split="|"):
     if split == "|":
         regex_pattern = f"\<\|startofpiece\|\>([^\|]*)\{split}"
         reg = re.compile(regex_pattern)
@@ -47,8 +50,13 @@ def filter_glm(text, prefix ="(BOT:|USER:)",split="|"):
     if t and t[0] == '':
         t = re.findall(f"<\|startofpiece\|>(.+)", text)
         t = re.findall(f"\|BOT:(.+)", "" if not t else t[0])
+    if not t:
+        regex_pattern = f"\[\[gMASK\]\]([^\|]*)\{split}"
+        reg = re.compile(regex_pattern)
+        t = re.findall(reg, text)
     res = "" if not t else t[0]
     res = res.strip()
+    res = re.sub("\[.*\]", "", res)
     prefix = prefix
     reg = re.compile(prefix)
     t = re.split(reg, res)
@@ -61,7 +69,6 @@ def filter_glm(text, prefix ="(BOT:|USER:)",split="|"):
 
     res = res.strip()
     return res
-
 
 
 if __name__ == "__main__":

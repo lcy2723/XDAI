@@ -18,6 +18,8 @@ import argparse
 app = FastAPI()
 item = GetSessInfo()
 item.version = 'xdai_glm_sp_domain'
+# glm_version = 'glm'
+glm_version = 'glm_130b'
 item.window_info.platform = "term"
 item.window_info.platform_id = 'xiaomu'
 agent = SessionManagerRam.get_agent_by_brand(item)
@@ -30,7 +32,6 @@ for line in fin:
 # 计算问题相似度模块
 modelname = "uer/sbert-base-chinese-nli"
 model = SentenceTransformer(modelname)
-
 
 with open('/home/tsq/user/lcy/sen_sim/qa_data.json', 'r') as f:
     qa_data = json.load(f)
@@ -84,6 +85,7 @@ def get_reply(request_data: Item):
         agent.import_history()
         course_info = id2about[request_data.course_id]
         replies = asyncio.run(agent.make_reply(courseinfo=course_info, qapairs=request_data.faq_qa_pairs,
+                                               glm_model=glm_version,
                                                concept_qa_pairs=request_data.concept_qa_pairs,
                                                complex_qa_args=request_data.complex_qa_args,
                                                q_type=request_data.q_type))

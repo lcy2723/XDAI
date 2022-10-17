@@ -49,13 +49,21 @@ class ChatAgent_SP(AgentBase):
         self.concept_qapairs = kwargs.get('concept_qa_pairs', [])
         self.complex_qa_args = kwargs.get('complex_qa_args', {})
         self.q_type = kwargs.get('q_type', '')
+        self.model = kwargs.get('glm_model', 'glm')
         if mode in [UtterranceMode.normal, UtterranceMode.activate]:
             num = self.concat_turns
             prompt, concept_text = self.get_concat_history(num)
             logger.info(f"[selected prompt]:\n{prompt}")
             raw_generated_contents = await getGeneratedText(prompt, limit=30, batchsize=1, model=self.model)
-            for text in raw_generated_contents:
-                reply = filter_glm(text, split="|", prefix=f"({self.botname}:|{self.username}:)")
+            if self.model == "glm":
+                for text in raw_generated_contents:
+                    reply = filter_glm(text, split="|", prefix=f"({self.botname}:|{self.username}:)")
+            else:
+                # glm-130b
+                for text in raw_generated_contents:
+                    print("130b text is", text)
+                    _reply = filter_glm(text['outputs'][0], split="|", prefix=f"({self.botname}:|{self.username}:)")
+                    reply = ''.join(_reply.split())
             if len(concept_text) > 0:
                 reply = reply + "\n 答案解析:" + concept_text
             logger.info(f"reply:{reply}")

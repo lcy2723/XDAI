@@ -36,6 +36,8 @@ async def generate_plm(prompt="", limit=30, url=None,model="glm"):
         url = CONFIG.default_plm_api
     if model == "glm":
         url = CONFIG.glm_query_api
+    if model == "glm_130b":
+        url = CONFIG.glm_130b_query_api
     # payload = {"content": prompt, "max_length": limit}
     payload = {"query": prompt, "limit": limit}
     res = await api_async(url=url, payload=payload)
