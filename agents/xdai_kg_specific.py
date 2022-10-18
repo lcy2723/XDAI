@@ -55,15 +55,19 @@ class ChatAgent_SP(AgentBase):
             prompt, concept_text = self.get_concat_history(num)
             logger.info(f"[selected prompt]:\n{prompt}")
             raw_generated_contents = await getGeneratedText(prompt, limit=30, batchsize=1, model=self.model)
+            # logger.info(f"130b raw_generated_contents is {raw_generated_contents}")
+            reply = ""
             if self.model == "glm":
                 for text in raw_generated_contents:
                     reply = filter_glm(text, split="|", prefix=f"({self.botname}:|{self.username}:)")
             else:
                 # glm-130b
                 for text in raw_generated_contents:
-                    print("130b text is", text)
+                    # logger.info(f"130b text is {text}")
                     _reply = filter_glm(text['outputs'][0], split="|", prefix=f"({self.botname}:|{self.username}:)")
+                    # logger.info(f"130b _reply is {_reply}")
                     reply = ''.join(_reply.split())
+                    # logger.info(f"130b reply is {reply}")
             if len(concept_text) > 0:
                 reply = reply + "\n 答案解析:" + concept_text
             logger.info(f"reply:{reply}")

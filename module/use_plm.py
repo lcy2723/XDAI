@@ -36,11 +36,15 @@ async def generate_plm(prompt="", limit=30, url=None,model="glm"):
         url = CONFIG.default_plm_api
     if model == "glm":
         url = CONFIG.glm_query_api
-    if model == "glm_130b":
-        url = CONFIG.glm_130b_query_api
     # payload = {"content": prompt, "max_length": limit}
     payload = {"query": prompt, "limit": limit}
+
+    if model == "glm_130b":
+        url = "http://103.238.162.37:9622/general"
+        payload = {"contexts": [prompt]}
     res = await api_async(url=url, payload=payload)
+    if model == "glm_130b":
+        return res
     if res.get("code") != 0:
         return False
     result = res.get("data")
@@ -60,7 +64,7 @@ async def getGeneratedText(prompt=[], limit=30, batchsize=1, model="ctxl"):
         asyncio.create_task(generate_plm(prompt=p, limit=l,model=model))
         for p, l in zip(prompt, limits)
     ]
-    done, pending = await asyncio.wait(tasks, timeout=6)
+    done, pending = await asyncio.wait(tasks, timeout=15)
 
     results = []
     for p in pending:
@@ -73,6 +77,6 @@ async def getGeneratedText(prompt=[], limit=30, batchsize=1, model="ctxl"):
 
 if __name__ == "__main__":
     st = time.time()
-    results = asyncio.run(generate_plm(prompt="你好"))
+    results = asyncio.run(getGeneratedText(prompt=["你好"], model="glm_130b"))
     print(time.time() - st)
     print(results)

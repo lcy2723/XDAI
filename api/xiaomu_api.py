@@ -6,6 +6,7 @@ import sys
 from pathlib import Path
 import json
 
+
 BASE_DIR = Path.resolve(Path(__file__)).parent.parent
 sys.path.append(str(BASE_DIR))
 print(BASE_DIR)
