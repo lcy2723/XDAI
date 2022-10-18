@@ -55,6 +55,11 @@ def filter_glm(text, prefix="(BOT:|USER:)", split="|"):
         reg = re.compile(regex_pattern)
         t = re.findall(reg, text)
     res = "" if not t else t[0]
+    if not t:
+        generated = text.split("[[gMASK]]")[1]
+        if '、' in generated:
+            listed = generated.split('、')[:4]
+            res = '、'.join(listed)
     res = res.strip()
     res = re.sub("\[.*\]", "", res)
     prefix = prefix
@@ -72,4 +77,7 @@ def filter_glm(text, prefix="(BOT:|USER:)", split="|"):
 
 
 if __name__ == "__main__":
-    pass
+    text = '小吃 太多了 , 肉 夹 馍 、 凉 皮 、 bian gb iang 面 、 西安 酿 皮 、 水 盆 羊肉 、 泡泡 油 糕 。 | Q : 字符串 ( character string ); 一串 邻 接 的 字符 。  算法 ( algorithm ); 解决 给定 问题的 确定的 计算机 指令 序列 , 用以 系统地 描述 解决问题的 步骤 。 所以 你 知道 什么 字符串 相关的 算法 吗 ? | A : [[gMASK]] [sop] 字符串 相关的 算法 有 : 字符串 的  哈 希 算法 、 字符串 的 分 治 算法 、 字符串 的 回 文 算法 、 字符串 的 回 文 逆 序 算法 、 字符串 的 回 文 算法 、 字符串 的 回 文 逆 序 算法 、 字符串 的 回 文 算法 、 字符串 的 回 文 逆 序 算法 、 字符串 的 回 文 算法 、 字符串 的 回 文 逆 序 算法 、 字符串 的 回 文 算 法 、 字符串 的 回 文 逆 序 算法 、 字符串 的 回 文 算法 、 字符串 的 回 文 逆 序 算法 、  字符串 的 回 文 算法 、 字符串 的 回 文 逆 序 算法 、 字符串 的 回 文 算法 、 字符串 的 回 文 逆 序 算法 、 字符串 的 回 文 算法 、 字符串 的 回 文 逆 序 算法 、 字符串 的 回 文 算法 、 字符串 的 回 文 逆 序 算法 、 字符串 的 回 文 算法 、 字符串 的 回 文 逆 序 算法 、 字 符串 的 回 文 算法 、 字符串 的 回 文 逆 序 算法 、 字符串 的 回 文 算法 、 字符串 的 回 文 逆 序 算法 、 字符串 的 回 文 算法 、 字符串 的 回 文 逆 序 算法 、 字符串 的 回 文 算法  、 字符串 的 回 文 逆 序 算法 、 字符串 的 回 文 算法 、 字符串 的 回 文 逆 序 算法 、 字符串 的 回 文 算法 、 字符串 的 回 文 逆 序 算法 、 字符串'
+    filtered = filter_glm(text, prefix="(Q:|A:)")
+    print("result is:")
+    print(filtered)

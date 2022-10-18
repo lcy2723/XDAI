@@ -69,7 +69,7 @@ class ChatAgent_SP(AgentBase):
                     reply = ''.join(_reply.split())
                     # logger.info(f"130b reply is {reply}")
             if len(concept_text) > 0:
-                reply = reply + "\n 答案解析:" + concept_text
+                reply = reply + "\n答案解析:" + concept_text
             logger.info(f"reply:{reply}")
             return [reply]
 
@@ -107,7 +107,7 @@ class ChatAgent_SP(AgentBase):
             concept_qapairs = self.__get_concept_qa()
             if concept_qapairs:
                 concept_text = " ".join([concept_qapair['a'] for concept_qapair in concept_qapairs])
-                _concept_text = "{}所以{}?答案是:".format(concept_text, query.get("text"))
+                _concept_text = "{}所以,{}? 答案是".format(concept_text, query.get("text"))
                 concat_text = shorten_concat_text + "|{}:{}|{}:{}".format(self.username, query.get("text"),
                                                                           self.botname,
                                                                           _concept_text)
@@ -209,16 +209,15 @@ class ChatAgent_SP(AgentBase):
         # qapairs =  qapairs[:3]
         qapairs = []
         for qapair in self.faq_qapairs:
-            qapair['q'] = qapair.pop('question')
-            qapair['a'] = qapair.pop('answer')
-            if self.complex_qa_args:
-                # For complex_qa, we only need concepts
-                if '\n' in qapair['a']:
-                    pure_explain = qapair['a'].split('\n')[0]
-                    qapair['a'] = pure_explain
-                else:
-                    continue
-            qapairs.append(qapair)
+            _qapair = {'q': qapair.pop('question'), 'a': qapair.pop('answer')}
+            # if self.complex_qa_args:
+            #     For complex_qa, we only need concepts
+            # if '\n' in qapair['a']:
+            #     pure_explain = qapair['a'].split('\n')[0]
+            #     qapair['a'] = pure_explain
+            # else:
+            #     continue
+            qapairs.append(_qapair)
         logger.info("faq result:{}".format(qapairs))
         return qapairs
 
@@ -227,14 +226,18 @@ class ChatAgent_SP(AgentBase):
         for qapair in self.concept_qapairs:
             if len(qapairs) >= max_concept_num:
                 break
-            qapair['q'] = qapair.pop('question')
-            qapair['a'] = qapair.pop('answer')
-            if '\n' in qapair['a']:
-                pure_explain = qapair['a'].split('\n')[0]
-                qapair['a'] = pure_explain
-            else:
+            _qapair = {'q': qapair.pop('question'), 'a': qapair.pop('answer').strip()}
+            # We need concept explanation
+            tmp = _qapair['a'].split('；')
+            if len(tmp) < 2:
                 continue
-            qapairs.append(qapair)
+            elif len(tmp[1]) < 5:
+                continue
+            # Domain information is separated by \n
+            if '\n' in _qapair['a']:
+                pure_explain = _qapair['a'].split('\n')[0]
+                _qapair['a'] = pure_explain
+            qapairs.append(_qapair)
         logger.info("raw concepts:{}".format(self.concept_qapairs))
         logger.info("concept result:{}".format(qapairs))
         return qapairs
