@@ -9,6 +9,7 @@ def observe(args, results):
     num_new_answer = 0
     num_kg = 0
     num_good_ans = 0
+    csv_results = []
     for i, result in enumerate(results):
         question = result[1]
         answer = result[2]
@@ -28,6 +29,10 @@ def observe(args, results):
             if i < args.show_num:
                 print(f"Q:{question},A:{answer},C:{course_name},S:{source},意义:{sense_commit},New:{new_answer}")
                 print("#" * 6)
+        csv_results.append({"question": question, "answer": answer, "course_name": course_name,
+                            "source": source, "sense_commit": sense_commit, "label_used": label_used,
+                            "type_belong": type_belong, "answer_commit": answer_commit,
+                            "new_answer": new_answer, "update_time": update_time})
         if sense_commit == "有意义":
             num_meaningful_questions += 1
         if type_belong == '知识图谱点击':
@@ -40,6 +45,8 @@ def observe(args, results):
     print(f"有新答案的问题有{num_new_answer}个,无新答案的回答有{len(results) - num_new_answer}个")
     print(f"好答案的问题有{num_good_ans}个,回答不好的有{len(results) - num_good_ans}个")
     print(f"知识图谱点击的问题有{num_kg}个")
+    df = pd.DataFrame(csv_results)
+    df.to_csv(os.path.join(args.data_dir, f'qa_history_{args.size}.csv'))
 
 
 def draw_distribution(args, results):

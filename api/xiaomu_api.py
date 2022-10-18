@@ -19,8 +19,8 @@ import argparse
 app = FastAPI()
 item = GetSessInfo()
 item.version = 'xdai_glm_sp_domain'
-# glm_version = 'glm'
-glm_version = 'glm_130b'
+glm_version = 'glm'
+# glm_version = 'glm_130b'
 item.window_info.platform = "term"
 item.window_info.platform_id = 'xiaomu'
 agent = SessionManagerRam.get_agent_by_brand(item)

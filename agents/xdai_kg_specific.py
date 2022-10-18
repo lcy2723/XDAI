@@ -68,6 +68,7 @@ class ChatAgent_SP(AgentBase):
                     # logger.info(f"130b _reply is {_reply}")
                     reply = ''.join(_reply.split())
                     # logger.info(f"130b reply is {reply}")
+            reply = reply.strip(",:，：")
             if len(concept_text) > 0:
                 reply = reply + "\n答案解析:" + concept_text
             logger.info(f"reply:{reply}")
@@ -223,22 +224,23 @@ class ChatAgent_SP(AgentBase):
 
     def __get_concept_qa(self, max_concept_num=2):
         qapairs = []
+        logger.info("raw concepts:{}".format(self.concept_qapairs))
         for qapair in self.concept_qapairs:
             if len(qapairs) >= max_concept_num:
                 break
             _qapair = {'q': qapair.pop('question'), 'a': qapair.pop('answer').strip()}
             # We need concept explanation
             tmp = _qapair['a'].split('；')
+            # logger.info("tmp:{}".format(tmp))
             if len(tmp) < 2:
                 continue
             elif len(tmp[1]) < 5:
                 continue
             # Domain information is separated by \n
-            if '\n' in _qapair['a']:
-                pure_explain = _qapair['a'].split('\n')[0]
-                _qapair['a'] = pure_explain
+            # if '\n属于' in _qapair['a']:
+            #     pure_explain = _qapair['a'].split('\n')[0]
+            #     _qapair['a'] = pure_explain
             qapairs.append(_qapair)
-        logger.info("raw concepts:{}".format(self.concept_qapairs))
         logger.info("concept result:{}".format(qapairs))
         return qapairs
 
