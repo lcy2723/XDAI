@@ -4,9 +4,10 @@ from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
 import sys
 from pathlib import Path
+from utils import get_logger
 import json
 
-
+logger = get_logger("XDAI")
 BASE_DIR = Path.resolve(Path(__file__)).parent.parent
 sys.path.append(str(BASE_DIR))
 print(BASE_DIR)
@@ -14,7 +15,7 @@ from module.session_managers.session_manager_ram import SessionManagerRam
 from database.data_types import UtteranceItem
 from database.models import TalkerType, GetSessInfo
 import asyncio
-import argparse
+import time
 
 app = FastAPI()
 item = GetSessInfo()
@@ -59,6 +60,7 @@ class Item(BaseModel):
     concept_qa_pairs: list = None
     complex_qa_args: dict = None
     q_type: str = None
+    time_dict: dict = None
 
 
 @app.post('/test')
@@ -66,6 +68,11 @@ def get_reply(request_data: Item):
     source = request_data.source
     agent.sess.history = []
     if source == "来自图灵机器人":
+        # 开始重写
+        time_dict = request_data.time_dict
+        xdai_start = time.time()
+        time_dict["xdai_start"] = xdai_start
+        time_dict["rewrite_prepare_cost"] = xdai_start - time_dict['core_end']
         for dialog_cache in request_data.dialog_cache:
             if not dialog_cache['final_question'] or len(dialog_cache['answers']) < 1:
                 # 历史 是空问题 或者 没有答案 则跳过
@@ -90,6 +97,11 @@ def get_reply(request_data: Item):
                                                concept_qa_pairs=request_data.concept_qa_pairs,
                                                complex_qa_args=request_data.complex_qa_args,
                                                q_type=request_data.q_type))
+        # 重写结束
+        xdai_end = time.time()
+        time_dict["xdai_end"] = xdai_end
+        time_dict["rewrite_prepare_cost"] = xdai_end - xdai_start
+        logger.info(f"time_dict: {time_dict}")
         for rep in replies:
             utt = UtteranceItem.parse_simple(talker=TalkerType.bot, text=rep)
             agent.sess.add_utterance(utt)
