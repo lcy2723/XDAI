@@ -7,7 +7,7 @@ import random
 from agents import AgentBase
 from module.use_plm import getGeneratedText
 from utils.processor import filter_glm
-from utils import get_logger
+from utils.log import get_logger
 from database.models import UtterranceMode
 from module.internal_api import get_similarity_scores_query, get_faq_pairs_api
 from module.qa_t5 import answer_QA
