@@ -4,15 +4,16 @@ from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
 import sys
 from pathlib import Path
-from utils import get_logger
 import json
 
-logger = get_logger("XDAI")
 BASE_DIR = Path.resolve(Path(__file__)).parent.parent
 sys.path.append(str(BASE_DIR))
 print(BASE_DIR)
 from module.session_managers.session_manager_ram import SessionManagerRam
 from database.data_types import UtteranceItem
+from utils.log import get_logger
+
+logger = get_logger("XDAI")
 from database.models import TalkerType, GetSessInfo
 import asyncio
 import time
@@ -100,7 +101,7 @@ def get_reply(request_data: Item):
         # 重写结束
         xdai_end = time.time()
         time_dict["xdai_end"] = xdai_end
-        time_dict["rewrite_prepare_cost"] = xdai_end - xdai_start
+        time_dict["glm_cost"] = xdai_end - xdai_start
         logger.info(f"time_dict: {time_dict}")
         for rep in replies:
             utt = UtteranceItem.parse_simple(talker=TalkerType.bot, text=rep)
