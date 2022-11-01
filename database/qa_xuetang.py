@@ -21,6 +21,7 @@ def observe(args, results):
         answer_commit = result[8]
         new_answer = result[9]
         update_time = result[10]
+        chat_id = result[11]
         if args.specific_id:
             if args.specific_id == int(result[0]):
                 print(
@@ -32,7 +33,7 @@ def observe(args, results):
         csv_results.append({"question": question, "answer": answer, "course_name": course_name,
                             "source": source, "sense_commit": sense_commit, "label_used": label_used,
                             "type_belong": type_belong, "answer_commit": answer_commit,
-                            "new_answer": new_answer, "update_time": update_time})
+                            "new_answer": new_answer, "session_id": chat_id, "update_time": update_time})
         if sense_commit == "有意义":
             num_meaningful_questions += 1
         if type_belong == '知识图谱点击':
@@ -79,7 +80,7 @@ if __name__ == '__main__':
     parser.add_argument('--size', help='原始数据数量', default=302000)
     parser.add_argument('--show_num', help='打印数据数量', default=5)
     parser.add_argument('--specific_id', help='具体的记录id', type=int, default=None)
-    parser.add_argument('--data_dir', help='数据地址', default='/data/tsq/xiaomu')
+    parser.add_argument('--data_dir', help='数据地址', default='/data/tsq/xiaomu/dump')
     parser.add_argument('--task', help='任务类型', default='observe',
                         choices=['observe', 'draw_distribution', 'dump_answer_commit'])
     args = parser.parse_args()
