@@ -1,6 +1,7 @@
 import json
 import argparse
 import os
+import random
 import pandas as pd
 from tqdm import tqdm
 
@@ -21,7 +22,7 @@ def observe(args, results):
         type_belong = result[7]
         answer_commit = result[8]
         new_answer = result[9]
-        update_time = result[10]
+        create_time = result[10]
         chat_id = result[11]
         if args.specific_id:
             if args.specific_id == int(result[0]):
@@ -34,7 +35,7 @@ def observe(args, results):
         csv_results.append({"question": question, "answer": answer, "course_name": course_name,
                             "source": source, "sense_commit": sense_commit, "label_used": label_used,
                             "type_belong": type_belong, "answer_commit": answer_commit,
-                            "new_answer": new_answer, "update_time": update_time, "session_id": chat_id})
+                            "new_answer": new_answer, "create_time": create_time, "session_id": chat_id})
         if sense_commit == "有意义":
             num_meaningful_questions += 1
         if type_belong == '知识图谱点击':
@@ -97,9 +98,9 @@ def sample_intention(args):
     # 去除预设的
     for _type in ['加减乘除', '作诗', '问助教', '脏问题', '助教回答', '预设问答', '视频答案']:
         df = df[df['type_belong'] != _type]
-    down_df = df[df["update_time"] >= "2022-09-22"]
-    df = df[df["update_time"] >= "2020-07"]
-    up_df = df[df["update_time"] <= "2022-09-12"]
+    down_df = df[df["create_time"] >= "2022-09-22"]
+    df = df[df["create_time"] >= "2020-07"]
+    up_df = df[df["create_time"] <= "2022-09-12"]
     # 去除了非正常时间的记录
     inner_df = pd.concat([up_df, down_df], join="inner")
     print("input data num is", len(inner_df))
@@ -120,27 +121,60 @@ def sample_intention(args):
     # 平均session长度,与session总数
     print("average len is ", avg_session_len)
     print("Total session is ", session_num)
-    # 采样session数
-    sample_session_num = int(args.sample_num / avg_session_len)
-    # 采样间隔
-    interval = int(session_num / sample_session_num)
-    print(f"sample_session_num {sample_session_num}, interval {interval}")
-    sessions = []
-    total_len = 0
-    for i, key in enumerate(chat_id2df.keys()):
-        if i % interval != 1:
-            continue
-        session_df = chat_id2df[key]
-        df_len = chat_id2df_len[key]
-        sessions.append(session_df)
-        total_len += df_len
-        if total_len > args.sample_num:
-            break
-    # 导出
-    # final_df = filter_df(pd.concat(sessions, join="inner"))
-    final_df = pd.concat(sessions, join="inner")
-    sample_path = os.path.join(args.data_dir, f'sample_{len(final_df)}_from_{args.size}.csv')
-    final_df.to_csv(sample_path)
+    if args.sample_method == 'time':
+        # 采样session数
+        sample_session_num = int(args.sample_num / avg_session_len)
+        # 采样间隔
+        interval = int(session_num / sample_session_num)
+        print(f"sample_session_num {sample_session_num}, interval {interval}")
+        sessions = []
+        total_len = 0
+        for i, key in enumerate(chat_id2df.keys()):
+            if i % interval != 3:
+                continue
+            session_df = chat_id2df[key]
+            df_len = chat_id2df_len[key]
+            sessions.append(session_df)
+            total_len += df_len
+            if total_len > args.sample_num:
+                break
+        # 导出
+        # final_df = filter_df(pd.concat(sessions, join="inner"))
+        final_df = pd.concat(sessions, join="inner")
+        sample_path = os.path.join(args.data_dir, f'sample_{len(final_df)}_from_{args.size}.csv')
+        final_df.to_csv(sample_path)
+    elif args.sample_method == 'length':
+        cnt_of_qa = 0
+        dic_of_length = [{'num': 0, 'id': []} for i in range(0, 500)]
+        for key, value in chat_id2df_len.items():
+            dic_of_length[int(value)]['num'] = dic_of_length[int(value)]['num'] + 1
+            dic_of_length[int(value)]['id'].append(key)
+            cnt_of_qa = cnt_of_qa + int(value)
+        # 输出session的长度和该长度的session的数目
+        # for index,value in enumerate(dic_of_length):
+        #     print(index,value)
+        partial = args.sample_num / cnt_of_qa
+        print(f'session partial is {partial}')
+        sessions = []
+        total_len = 0
+        for item in dic_of_length:
+            if item['num'] != 0:
+                num_of_sessions = int(partial * item['num'])
+                if num_of_sessions <= 1:
+                    k = random.random()
+                    if k > 0.80:
+                        num_of_sessions = 1
+                    else:
+                        num_of_sessions = 0
+                for i in range(0, num_of_sessions):
+                    session_df = chat_id2df[item['id'][i]]
+                    sessions.append(session_df)
+                    total_len = total_len + dic_of_length.index(item)
+        print(f'total_len = {total_len}')
+        print(sessions[1])
+        final_df = pd.concat(sessions, join="inner")
+        sample_path = os.path.join(args.data_dir, f'sample_{len(final_df)}_from_{args.size}.csv')
+        final_df.to_csv(sample_path)
 
 
 if __name__ == '__main__':
@@ -153,6 +187,7 @@ if __name__ == '__main__':
                         choices=['observe', 'sample_intention', 'dump_answer_commit'])
     # 对于准备意图检测数据的采样
     parser.add_argument('--sample_num', help='要采样的数量', type=int, default=4000)
+    parser.add_argument('--sample_method', help='采样方法', default='time', choices=['time', 'length'])
 
     args = parser.parse_args()
 
