@@ -11,6 +11,7 @@ from utils.log import get_logger
 from database.models import UtterranceMode
 from module.internal_api import get_similarity_scores_query, get_faq_pairs_api
 from module.qa_t5 import answer_QA
+from database.persona import personas, persona2qa_lst
 from database.complex_qa_expamples import complex_type2qa_examples
 import math
 
@@ -78,9 +79,9 @@ class ChatAgent_SP(AgentBase):
             return self.byemsg
 
     def get_concat_history(self, num=None):
+        query = self.history[-1]
         history_utts = self.get_chatlog_utterances(num=num)
         imported_qapairs = self.get_external_retrieved_qapairs()
-        query = self.history[-1]
         all_candidates = history_utts + imported_qapairs
         logger.info("history_utts:{}".format(history_utts))
         # logger.info("all_candidates:{}".format(all_candidates))
@@ -147,20 +148,23 @@ class ChatAgent_SP(AgentBase):
         return res
 
     def get_chatlog_utterances(self, num):
-        history_selected = self.history[-num - 1:-1][::-1]
-        """
-         def process_utt(utt, order=0):
-            text = utt.get("text")
-            talker = "{botname}" if utt.get("talker") == "bot" else "{username}"
-            w = 1 + math.exp(-0.2 * order)
-            res = {"text": f"{talker}:{text}", "weight": w}
-            return res
-
-        history_utts = [
-            process_utt(doc, order=i) for i, doc in enumerate(history_selected)
-        ]
-        """
-        his_turn = len(history_selected) // 2
+        query = self.history[-1]
+        # consider the persona
+        candidate_history = self.history
+        use_persona = False
+        for persona in personas:
+            if persona in query:
+                # add persona qa in history
+                persona_qa = persona2qa_lst[persona]
+                candidate_history = persona_qa + self.history[-3:-1]
+                num += len(persona_qa)
+                use_persona = True
+                break
+        history_selected = candidate_history[-num - 1:-1][::-1]
+        if use_persona:
+            his_turn = len(history_selected)
+        else:
+            his_turn = len(history_selected) // 2
         history_utts = []
         for i in range(his_turn):
             try:
