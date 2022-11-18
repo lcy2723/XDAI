@@ -11,7 +11,7 @@ from utils.log import get_logger
 from database.models import UtterranceMode
 from module.internal_api import get_similarity_scores_query, get_faq_pairs_api
 from module.qa_t5 import answer_QA
-from database.persona import personas, persona2qa_lst
+from database.persona import personas, persona2qa_lst, persona2background
 from database.complex_qa_expamples import complex_type2qa_examples
 import math
 
@@ -38,6 +38,7 @@ class ChatAgent_SP(AgentBase):
     concept_qapairs = []
     complex_qa_args = {}
     q_type = ""
+    persona = ""
 
     def __init__(self, sess_mgr=None, talkername="Q"):
         logger.info(f"init class: {self.version}, talker's name:{talkername}")
@@ -151,20 +152,18 @@ class ChatAgent_SP(AgentBase):
         query = self.history[-1]
         # consider the persona
         candidate_history = self.history
-        use_persona = False
         for persona in personas:
-            if persona in query:
+            if persona in query["text"]:
                 # add persona qa in history
                 persona_qa = persona2qa_lst[persona]
-                candidate_history = persona_qa + self.history[-3:-1]
+                candidate_history = persona_qa + self.history[-3:]
                 num += len(persona_qa)
-                use_persona = True
+                self.persona = persona
                 break
+        logger.info(f"candidate_history is: {candidate_history}")
         history_selected = candidate_history[-num - 1:-1][::-1]
-        if use_persona:
-            his_turn = len(history_selected)
-        else:
-            his_turn = len(history_selected) // 2
+        # logger.info(f"history_selected is: {history_selected}")
+        his_turn = len(history_selected) // 2
         history_utts = []
         for i in range(his_turn):
             try:
@@ -176,18 +175,25 @@ class ChatAgent_SP(AgentBase):
                     talker_2 = history_selected[i * 2].get("talker")
                     talker_2_str = "{botname}" if talker_2 == "bot" else "{username}"
                     w = 1 + math.exp(-0.2 * i)
+                    if talker_2_str == "{botname}":
+                        text = f"{talker_1_str}:{question}|{talker_2_str}:{answer}"
+                    else:
+                        text = f"{talker_2_str}:{answer}|{talker_1_str}:{question}"
                     res = {
-                        "text": f"{talker_1_str}:{question}|{talker_2_str}:{answer}",
+                        "text": text,
                         "q": question,
                         "a": answer,
                         "weight": w
                     }
+                    logger.info(f"res {res}")
                     history_utts.append(res)
             except KeyError:
                 continue
         return history_utts
 
     def __get_conversational_cold_start(self):
+        if self.persona:
+            self.background = persona2background[self.persona]
         qapairs = [{"q": i[0], "a": i[1]} for i in self.background]
         return qapairs
 
