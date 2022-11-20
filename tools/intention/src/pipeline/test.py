@@ -7,9 +7,9 @@ from tqdm import tqdm
 import os
 import pandas as pd
 import numpy as np
-import src.models.albert
-from src.models.albert import AlbertClassifierModel
-from src.pipeline.preprocess import DataProcessor
+import tools.intention.src.models.albert
+from tools.intention.src.models.albert import AlbertClassifierModel
+from tools.intention.src.pipeline.preprocess import DataProcessor
 
 emotions = ['neutral', 'positive', 'negative']
 
@@ -23,9 +23,9 @@ def work(args):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     # 加载test数据
     tokenizer = BertTokenizer.from_pretrained(args.pretrained_dir)
-    df_test = pd.read_csv(args.df_test_path, header=None)
-    df_test.columns = ['index', 'text', 'id']
-    processor = DataProcessor(tokenizer, args.max_input_len)
+    df_test = pd.read_csv(args.df_test_path)
+    processor = DataProcessor(tokenizer, args.max_input_len,
+                              args.use_course_name, args.use_history_answer, args.max_history_turns)
     inputs = processor.get_input(df_test)
     # 加载ckpt
     loaded = torch.load(args.ckpt)
@@ -82,12 +82,14 @@ def predict_on_testset(model, inputs, df_test, device, args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     # path parameters
-    parser.add_argument('--data-dir', type=str, default='./data')
-    parser.add_argument('--save-dir', type=str, default='./ckpt')
-    parser.add_argument('--pretrained-dir', type=str, default=src.models.albert.pretrained)
+    parser.add_argument('--data-dir', type=str, default='/data/tsq/xiaomu/intention/real')
+    parser.add_argument('--save-dir', type=str, default='/data/tsq/xiaomu/intention/real/ckpt')
+    parser.add_argument('--pretrained-model', type=str, default='/data/tsq/xiaomu/intention/albert_chinese_base')
     parser.add_argument('--ckpt', required=True)
-    # test parameters
-
+    # Data Process parameters
+    parser.add_argument("--use_course_name", action='store_true', default=False)
+    parser.add_argument("--use_history_answer", action='store_true', default=False)
+    parser.add_argument('--max_history_turns', type=int, default=4)
     # model parameters
     parser.add_argument('--max-input-len', type=int, default=100)
     # mini-batch 保证每一条test都有输出
@@ -95,7 +97,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
     # test集的路径
-    args.df_test_path = os.path.join(args.data_dir, "Test.csv")
+    args.df_test_path = os.path.join(args.data_dir, "test.csv")
 
     # write the output [id,sub_id,pred_y]
     ckpt_base = os.path.splitext(os.path.basename(args.ckpt))[0]

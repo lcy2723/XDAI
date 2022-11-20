@@ -3,7 +3,7 @@ import torch
 import torch.nn as nn
 from torch.nn.functional import softmax
 
-pretrained = 'bert-base-cased'
+pretrained = '/data/tsq/xiaomu/intention/albert_chinese_base'
 
 
 class AlbertClassifierModel(nn.Module):

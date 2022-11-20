@@ -13,13 +13,12 @@ import pandas as pd
 import logging
 from sklearn.metrics import f1_score
 
-import src.models.albert
-from src.pipeline.preprocess import DataProcessor
-from src.models.albert import AlbertClassifierModel
-from src.pipeline.utils import setup_logger, MetricLogger, strip_prefix_if_present
+from tools.intention.src.pipeline.preprocess import DataProcessor
+from tools.intention.src.models.albert import AlbertClassifierModel
+from tools.intention.src.pipeline.utils import setup_logger, MetricLogger, strip_prefix_if_present
 
 
-def train(inputs, outputs, args, logger):
+def train(inputs, outputs, valid_inputs, valid_outputs, args, logger):
     """
      :param:
      - inputs: (list) 作为输入的tensor, 它是由get_input处理得的
@@ -96,7 +95,7 @@ def train(inputs, outputs, args, logger):
                     )
                 )
         # 验证这个epoch的效果
-        score = validate(inputs, outputs, model, device, args)
+        score = validate(valid_inputs, valid_outputs, model, device, args)
         logger.info("val result score:")
         logger.info(score)
         save = {
@@ -127,9 +126,6 @@ def validate(inputs, outputs, model, device, args):
         pred_probs = []
         labels = []
         for batch_iter, (input_ids, attention_mask, segments_tensor, label) in enumerate(loader):
-            # 测2000条来验证这个epoch的效果
-            if batch_iter * args.batch_size > 2000:
-                break
             pred_prob = model(input_ids.to(device), segments_tensor.to(device), attention_mask.to(device))
             pred_probs.append(pred_prob)
             labels.append(label.int())
@@ -153,14 +149,19 @@ def work(args):
     :return: 训练结束
     """
     tokenizer = BertTokenizer.from_pretrained(args.pretrained_model)
-    df_train = pd.read_csv(args.df_train_path, header=None)
-    df_train.columns = ['index', 'text', 'labels', 'id']
-    processor = DataProcessor(tokenizer, args.max_input_len)
+    processor = DataProcessor(tokenizer, args.max_input_len,
+                              args.use_course_name, args.use_history_answer, args.max_history_turns)
+    # get train input
+    df_train = pd.read_csv(args.df_train_path)
     inputs = processor.get_input(df_train)
     outputs = processor.get_output(df_train)
     print(inputs[0].shape)
     print(inputs[1].shape)
     print(outputs.shape)
+    # get valid input
+    df_valid = pd.read_csv(args.df_valid_path)
+    valid_inputs = processor.get_input(df_valid)
+    valid_outputs = processor.get_output(df_valid)
     torch.manual_seed(args.seed)
     random.seed(args.seed)
     np.random.seed(args.seed)
@@ -177,20 +178,24 @@ def work(args):
     for k, v in vars(args).items():
         logger.info(k + ':' + str(v))
 
-    train(inputs, outputs, args, logger)
+    train(inputs, outputs, valid_inputs, valid_outputs, args, logger)
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     # path parameters
-    parser.add_argument('--data-dir', type=str, default='./data/')
-    parser.add_argument('--save-dir', type=str, default='./ckpt')
-    parser.add_argument('--pretrained-model', type=str, default=src.models.albert.pretrained)
+    parser.add_argument('--data-dir', type=str, default='/data/tsq/xiaomu/intention/real')
+    parser.add_argument('--save-dir', type=str, default='/data/tsq/xiaomu/intention/real/ckpt')
+    parser.add_argument('--pretrained-model', type=str, default='/data/tsq/xiaomu/intention/albert_chinese_base')
     # model parameters, see them in `model.py`
     parser.add_argument('--num-topics', type=int, default=3)
     parser.add_argument('--max-input-len', type=int, default=100)
     parser.add_argument('--out-channels', type=int, default=2)
     parser.add_argument('--kernel-size', type=int, nargs='+', default=[2, 3, 4])
+    # Data Process parameters
+    parser.add_argument("--use_course_name", action='store_true', default=False)
+    parser.add_argument("--use_history_answer", action='store_true', default=False)
+    parser.add_argument('--max_history_turns', type=int, default=4)
 
     # training parameters
     parser.add_argument('--max_epoch', type=int, default=5)
@@ -202,6 +207,6 @@ if __name__ == "__main__":
     parser.add_argument('--dropout', type=float, default=0.3)
     parser.add_argument('--optim', default='adam', choices=['adam', 'adamw', 'sgd'])
     args = parser.parse_args()
-    args.df_train_path = os.path.join(args.data_dir, "Train.csv")
-    args.df_test_path = os.path.join(args.data_dir, "Test.csv")
+    args.df_train_path = os.path.join(args.data_dir, "train.csv")
+    args.df_valid_path = os.path.join(args.data_dir, "valid.csv")
     work(args)
