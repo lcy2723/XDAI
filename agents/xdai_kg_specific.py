@@ -153,17 +153,22 @@ class ChatAgent_SP(AgentBase):
 
         def get_persona_intention(persona):
             for query in query_lst:
-                if persona in query:
+                if persona in query["text"]:
                     return persona
             return None
 
         # consider the persona
+        # logger.info(f"query_lst is: {query_lst}")
+        # logger.info(f"personas is: {personas}")
         candidate_history = self.history
         for _persona in personas:
             persona = get_persona_intention(_persona)
+            # logger.info(f"persona is: {persona}")
             if persona:
                 # add persona qa in history
                 persona_qa = persona2qa_lst[persona]
+                logger.info(f"persona is: {persona}")
+                logger.info(f"persona_qa is: {persona_qa}")
                 candidate_history = persona_qa + self.history[-3:]
                 num += len(persona_qa)
                 self.persona = persona
