@@ -148,12 +148,20 @@ class ChatAgent_SP(AgentBase):
         res = get_similarity_scores_query(target=target, candidates=text_list)
         return res
 
-    def get_chatlog_utterances(self, num):
-        query = self.history[-1]
+    def get_chatlog_utterances(self, num, max_history_turns=8):
+        query_lst = self.history[::-2][:max_history_turns]
+
+        def get_persona_intention(persona):
+            for query in query_lst:
+                if persona in query:
+                    return persona
+            return None
+
         # consider the persona
         candidate_history = self.history
-        for persona in personas:
-            if persona in query["text"]:
+        for _persona in personas:
+            persona = get_persona_intention(_persona)
+            if persona:
                 # add persona qa in history
                 persona_qa = persona2qa_lst[persona]
                 candidate_history = persona_qa + self.history[-3:]
@@ -193,7 +201,10 @@ class ChatAgent_SP(AgentBase):
 
     def __get_conversational_cold_start(self):
         if self.persona:
-            self.background = persona2background[self.persona]
+            try:
+                self.background = persona2background[self.persona]
+            except KeyError:
+                self.background = [("你好", f"同学你好, 我是你的{self.persona}小木~")]
         qapairs = [{"q": i[0], "a": i[1]} for i in self.background]
         return qapairs
 

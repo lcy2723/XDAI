@@ -11,7 +11,7 @@ import shutil
 import os
 import pandas as pd
 import logging
-from sklearn.metrics import f1_score
+from sklearn.metrics import f1_score, accuracy_score
 
 from tools.intention.src.pipeline.preprocess import DataProcessor
 from tools.intention.src.models.albert import AlbertClassifierModel
@@ -95,9 +95,11 @@ def train(inputs, outputs, valid_inputs, valid_outputs, args, logger):
                     )
                 )
         # 验证这个epoch的效果
-        score = validate(valid_inputs, valid_outputs, model, device, args)
-        logger.info("val result score:")
-        logger.info(score)
+        f1, acc = validate(valid_inputs, valid_outputs, model, device, args)
+        logger.info("val result score f1:")
+        logger.info(f1)
+        logger.info("val result score acc:")
+        logger.info(acc)
         save = {
             'kwargs': model_kwargs,
             'state_dict': model.state_dict(),
@@ -107,7 +109,7 @@ def train(inputs, outputs, valid_inputs, valid_outputs, args, logger):
         scheduler.step()
         # 每个epoch保留一个ckpt
         torch.save(save,
-                   os.path.join(args.save_dir, 'model_epoch%d_val%.3f.pt' % (epoch_num, score)))
+                   os.path.join(args.save_dir, 'model_epoch%d_val%.3f.pt' % (epoch_num, acc)))
 
 
 def validate(inputs, outputs, model, device, args):
@@ -117,7 +119,8 @@ def validate(inputs, outputs, model, device, args):
     - outputs: (tensor) 作为标注的tensor, 它是由get_output处理得的
     - args: 一堆训练前规定好的参数
     :return:
-    - f1: 最好的f1分数
+    - f1: f1分数
+    - acc: 准确率
     """
     with torch.no_grad():
         torch_dataset = Data.TensorDataset(inputs[0], inputs[1], inputs[2], outputs)
@@ -139,8 +142,9 @@ def validate(inputs, outputs, model, device, args):
         print("df_preds")
         print(df_preds.shape)
         print(df_labels.shape)
-        f1 = f1_score(df_labels, df_preds, average="micro")
-    return f1
+        f1 = f1_score(df_labels, df_preds, average="macro")
+        acc = accuracy_score(df_labels, df_preds)
+    return f1, acc
 
 
 def work(args):

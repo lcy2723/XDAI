@@ -1,7 +1,6 @@
 import json
-
-personas = ['学长', '学姐']
-fin = open('/home/tsq/stream-bot/data/tsq22_glm_base.json', 'r')
+personas = ['同学', '朋友', '助教', '老师', '学弟', '学妹', '学长', '学姐']
+fin = open('/home/tsq/stream-bot/data/zsy_glm_base.json', 'r')
 persona2qa_lst = json.load(fin)
 
 persona2background = {

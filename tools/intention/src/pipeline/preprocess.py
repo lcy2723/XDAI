@@ -66,6 +66,11 @@ class DataProcessor(object):
     def process_ans(self, _answer):
         max_ans_len = self.max_sequence_length // self.max_history_turns
         # filter some html tags
+        if type(_answer) != str:
+            print("process_ans")
+            print(_answer)
+            print(type(_answer))
+            return _answer
         message = re.sub(r'<.*?>', "", _answer)
         message = re.sub(r'\n', "", message)
         message = re.sub(r'答案解析.*', "", message)

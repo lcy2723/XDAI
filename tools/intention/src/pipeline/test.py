@@ -7,11 +7,12 @@ from tqdm import tqdm
 import os
 import pandas as pd
 import numpy as np
+from sklearn.metrics import f1_score, accuracy_score
 import tools.intention.src.models.albert
 from tools.intention.src.models.albert import AlbertClassifierModel
 from tools.intention.src.pipeline.preprocess import DataProcessor
 
-emotions = ['neutral', 'positive', 'negative']
+classes = ['简单问题', '复杂问题', '平台、课程问题', '情绪闲聊', '其他闲聊', '其他']
 
 
 def work(args):
@@ -22,11 +23,12 @@ def work(args):
     """
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     # 加载test数据
-    tokenizer = BertTokenizer.from_pretrained(args.pretrained_dir)
+    tokenizer = BertTokenizer.from_pretrained(args.pretrained_model)
     df_test = pd.read_csv(args.df_test_path)
     processor = DataProcessor(tokenizer, args.max_input_len,
                               args.use_course_name, args.use_history_answer, args.max_history_turns)
     inputs = processor.get_input(df_test)
+    labels = processor.get_output(df_test)
     # 加载ckpt
     loaded = torch.load(args.ckpt)
     model_kwargs = loaded['kwargs']
@@ -47,14 +49,14 @@ def work(args):
     model = model.to(device)
     # 预测
     with torch.no_grad():
-        predict_on_testset(model, inputs, df_test, device, args)
+        predict_on_testset(model, inputs, labels, device, args)
 
 
-def predict_on_testset(model, inputs, df_test, device, args):
+def predict_on_testset(model, inputs, labels, device, args):
     """
     :param model: 模型对象
     :param inputs: (list) 作为输入的tensor, 它是由get_input处理得的
-    :param df_test: test集原始数据的 dataFrame
+    :param labels: test集原始数据的 labels
     :param device: cuda 或 cpu
     :param args:一堆 运行前 规定好的 参数
     :return: 测试集输出结束
@@ -72,11 +74,20 @@ def predict_on_testset(model, inputs, df_test, device, args):
     merged_pred_probs = torch.cat(pred_probs).cpu().numpy()
     print(merged_pred_probs.shape)
     pred_y_list = np.argmax(merged_pred_probs, axis=1).tolist()
+    # 计算分数
+    df_labels = pd.DataFrame(labels.cpu().numpy())
+    df_preds = pd.DataFrame(np.argmax(merged_pred_probs, axis=1))
+    f1 = f1_score(df_labels, df_preds, average="macro")
+    acc = accuracy_score(df_labels, df_preds)
+    # 存
+    args.fout.write("### test scores ###\n")
+    args.fout.write(f"f1 {f1}\n")
+    args.fout.write(f"acc {acc}\n")
     # 保存预测的类
     with open(args.output_txt_path, 'w') as fout:
         for pred_y in pred_y_list:
             # print(pred_y)
-            fout.write("{}\n".format(emotions[pred_y]))
+            fout.write("{}\n".format(classes[pred_y]))
 
 
 if __name__ == "__main__":
