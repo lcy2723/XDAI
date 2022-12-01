@@ -151,18 +151,18 @@ class ChatAgent_SP(AgentBase):
     def get_chatlog_utterances(self, num, max_history_turns=8):
         query_lst = self.history[::-2][:max_history_turns]
 
-        def get_persona_intention(persona):
-            for query in query_lst:
-                if persona in query["text"]:
-                    return persona
+        def get_persona_intention(query):
+            for _persona in personas:
+                if _persona in query["text"]:
+                    return _persona
             return None
 
         # consider the persona
         # logger.info(f"query_lst is: {query_lst}")
         # logger.info(f"personas is: {personas}")
         candidate_history = self.history
-        for _persona in personas:
-            persona = get_persona_intention(_persona)
+        for _query in query_lst:
+            persona = get_persona_intention(_query)
             # logger.info(f"persona is: {persona}")
             if persona:
                 # add persona qa in history
