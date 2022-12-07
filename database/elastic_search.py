@@ -63,7 +63,7 @@ def preprocess(args):
                             # output doc
                             res_dict = {
                                 "id": f"{ccid}_{doc_num}",
-                                "title": ccid,  # TODO ccid to course
+                                "title": video_dict["name"],
                                 "body": doc,
                                 "tags": []
                             }
@@ -123,7 +123,8 @@ def build_index(args):
     # create and save and article
     iters = yield_data(args)
     for iter in tqdm(iters, total=len(iters), desc="build_index"):
-        article = MoocArticle(meta={'id': iter['id']}, title=iter['title'], tags=iter['tags'])
+        article = MoocArticle(meta={'id': iter['id']}, title=iter['title'],
+                              body=iter['body'])
         article.body = iter['body']
         article.save()
 

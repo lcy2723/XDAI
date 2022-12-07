@@ -13,10 +13,6 @@ class MoocArticle(Document):
             "number_of_shards": 2,
         }
 
-    def save(self, **kwargs):
-        self.length = len(self.body.split())
-        return super(MoocArticle, self).save(**kwargs)
-
 
 class BaiduArticle(Document):
     name = Keyword()
