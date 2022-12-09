@@ -1,5 +1,7 @@
 from elasticsearch_dsl import connections
 from database.es_model import MoocArticle, name2model
+from elasticsearch_dsl import Search
+from elasticsearch import Elasticsearch
 import argparse
 import os
 import json
@@ -129,11 +131,20 @@ def build_index(args):
         article.save()
 
 
+def search_bm(query):
+    client = Elasticsearch()
+    s = Search(using=client)
+    s = s.query("multi_match", query=query, fields=['title', 'body'])
+    res = [hit.body for hit in s]
+    res_str = "".join(res)[:500]
+    return res_str
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Data for searching Open-QA documents on moooccube')
     parser.add_argument('--data_dir', help='数据地址', default='/data/tsq/MOOCCube2')
     parser.add_argument('--task', help='任务类型', default='preprocess',
-                        choices=['preprocess', 'build_index'])
+                        choices=['preprocess', 'build_index', 'search_qa'])
     parser.add_argument('--init', action='store_true')
     # 对于建立索引数据的来源
     parser.add_argument('--model', help='索引模型', default='MoocArticle', choices=['MoocArticle', 'BaiduArticle'])
