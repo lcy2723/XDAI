@@ -1,6 +1,7 @@
 import argparse
 import os
 import seaborn as sns
+import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 
@@ -10,8 +11,11 @@ def prepare_args():
     parser.add_argument('--data_dir', help='Where to load', default='/data/tsq/xiaomu/complex/')
     parser.add_argument('--input_files', help='Where to load',
                         default=['result_20220912_fix_prompt_原因类.csv', 'result_20220912_fix_prompt_比较类.csv'])
-    parser.add_argument('--pic_dir', help='Where to save', default='/data/tsq/xiaomu/complex/pic/')
-    parser.add_argument('--pic_name', help='Where to save', default='cot_v1_fix_prompt')
+    parser.add_argument('--pic_dir', help='Where to save', default='/data/tsq/xiaomu/statistic/')
+    parser.add_argument('--pic_name', help='Where to save', default='time_v1')
+    # task
+    parser.add_argument('--task', type=str, default='human_acc',
+                        choices=['time_distribution', 'human_acc'])
     args = parser.parse_args()
     return args
 
@@ -62,6 +66,37 @@ def draw_acc(args):
     print(f"finish at {save_path}")
 
 
+def draw_time_distribution(args):
+    save_path = os.path.join(args.pic_dir, args.pic_name)
+    # 　设置字体
+    sns.set_theme(style="whitegrid", font='Times New Roman')
+    model_names = ['GPT3', '130B', 'CPM', 'GLM', 'Cdi.', 'PLA.', 'EVA', 'XDAI', 'L.M.', 'Rule']
+    times = [3.79, 15.14, 1.07, 0.9, 1.5, 3, 2, 1.6, 1.3, 0.12]
+    Type = ['General Language Model'] * 4 + ['Open-domain Dialogue Model'] * 3 + ['Knowledge-grounded Model'] * 3
+    type_score = {"model_names": model_names, "times": times, "Type": Type}
+    df_data = pd.DataFrame(type_score)
+    sort_df = df_data.sort_values(by=["times"], ascending=[True])
+    ax = sns.barplot(x="model_names", y="times", hue="Type", data=sort_df, dodge=False)
+    # Set these based on your column counts
+    newwidth = 0.5
+    for bar in ax.patches:
+        x = bar.get_x()
+        width = bar.get_width()
+        centre = x + width / 2.
+
+        bar.set_x(centre - newwidth / 2.)
+        bar.set_width(newwidth)
+    # ax.set_xticks(range(len(sort_df)), labels=range(2011, 2019))
+    ax.set_xlabel("Model")
+    ax.set_ylabel("Response Time(s)")
+    plt.savefig(save_path, bbox_inches='tight')
+    plt.close('all')
+    print(f"finish at {save_path}")
+
+
 if __name__ == '__main__':
     args = prepare_args()
-    draw_acc(args)
+    if args.task == 'human_acc':
+        draw_acc(args)
+    elif args.task == 'time_distribution':
+        draw_time_distribution(args)

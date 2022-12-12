@@ -44,3 +44,15 @@ python -m database.elastic_search --task 'build_index' --model 'MoocArticle' --i
 
 # (文档检索) Elastic Search
 
+```
+tmux a -t 130b
+```
+
+```
+conda activate testretri
+```
+
+```
+CUDA_VISIBLE_DEVICES=7 python fix_his_questions.py --data_dir '/data/tsq/xiaomu/qa' --test_file '问题答案标注.xlsx' --test_version bm25
+```
+
