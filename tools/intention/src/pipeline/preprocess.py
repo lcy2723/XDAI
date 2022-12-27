@@ -1,3 +1,4 @@
+import os
 import re
 import torch
 import pandas as pd
@@ -154,9 +155,28 @@ class DataProcessor(object):
         res_df = pd.DataFrame(res_lst)
         res_df.to_csv(out_data_path)
 
+    def transform_splits_to_binary_intention(self, data_dir):
+        splits = ['train', 'valid', 'test']
+        real_intention_dir = os.path.join(data_dir, 'real')
+        bin_intention_dir = os.path.join(data_dir, 'binary')
+        for sp in splits:
+            input_path = os.path.join(real_intention_dir, f'{sp}.csv')
+            output_path = os.path.join(bin_intention_dir, f'{sp}.csv')
+            df = pd.read_csv(input_path)
+            res_lst = []
+            for i in tqdm(range(len(df))):
+                label = df.iloc[i]['问题类型']
+                id_label = self.label2binary_id[label]
+                res = dict(df.iloc[i])
+                res['问题类型'] = id_label
+                res_lst.append(res)
+            res_df = pd.DataFrame(res_lst)
+            res_df.to_csv(output_path)
+
 
 if __name__ == '__main__':
     processor = DataProcessor(None, None)
-    raw_data_path = '/data/tsq/xiaomu/intention/real_intention_4002.csv'
-    out_data_path = '/data/tsq/xiaomu/intention/binary_intention_4002.csv'
-    processor.transform_to_binary_intention(raw_data_path, out_data_path)
+    # raw_data_path = '/data/tsq/xiaomu/intention/real_intention_4002.csv'
+    # out_data_path = '/data/tsq/xiaomu/intention/binary_intention_4002.csv'
+    # processor.transform_to_binary_intention(raw_data_path, out_data_path)
+    processor.transform_splits_to_binary_intention('/data/tsq/xiaomu/intention/')

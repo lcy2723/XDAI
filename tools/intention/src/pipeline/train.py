@@ -188,8 +188,8 @@ def work(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     # path parameters
-    parser.add_argument('--data-dir', type=str, default='/data/tsq/xiaomu/intention/real')
-    parser.add_argument('--save-dir', type=str, default='/data/tsq/xiaomu/intention/real/ckpt')
+    parser.add_argument('--data-dir', type=str, default='/data/tsq/xiaomu/intention/binary')
+    parser.add_argument('--save-dir', type=str, default='/data/tsq/xiaomu/intention/binary/ckpt')
     parser.add_argument('--pretrained-model', type=str, default='/data/tsq/xiaomu/intention/albert_chinese_base')
     # model parameters, see them in `model.py`
     parser.add_argument('--num-topics', type=int, default=3)
