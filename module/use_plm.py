@@ -1,6 +1,7 @@
 import asyncio
 import os
 import sys
+
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(BASE_DIR)
 import requests, json
@@ -9,7 +10,7 @@ import aiohttp
 from config import CONFIG
 
 
-async def api_async(url="", payload={},  headers={}):
+async def api_async(url="", payload={}, headers={}):
     """
     import aiohttp
     """
@@ -22,7 +23,6 @@ async def api_async(url="", payload={},  headers={}):
             return data
 
 
-
 def req_api(url="", payload={}, method="POST", headers={}):
     if headers == {}:
         headers = {"Content-Type": "application/json;charset=utf8"}
@@ -31,7 +31,45 @@ def req_api(url="", payload={}, method="POST", headers={}):
     result = response.json()
     return result
 
-async def generate_plm(prompt="", limit=30, url=None,model="glm"):
+
+def test130b(texts, strategy="BaseStrategy", stop=[], regix=""):
+    # If TOPK/TOPP are 0 it defaults to greedy sampling, top-k will also override top-p
+    data = {
+        "prompt": texts,
+        "max_tokens": 64,
+        "min_tokens": 0,
+        "top_k": 1,
+        "top_p": 0,
+        "temperature": 1,
+        "seed": 1453,
+        "sampling_strategy": strategy,
+        "num_beams": 4,
+        "length_penalty": 0.9,
+        "no_repeat_ngram_size": 3,
+        "regix": regix
+    }
+
+    t = time.time()
+    res = requests.post("http://180.184.97.60:9624/generate", json=data).content.decode()
+    t = time.time() - t
+
+    res = json.loads(res)
+    # print(res['text'], end='\n\n')
+    text_res = []
+
+    for generate, text in zip(res['text'], texts):
+        generate.append('')
+        generate = generate[0]
+        # generate = "\x1B[4m" + generate.replace("[[gMASK]]", "") + "\x1B[0m"
+        if "MASK" in text:
+            text_res.append(text.replace("[gMASK]", "[[gMASK]]" + generate).replace("[MASK]", generate))
+        else:
+            text_res.append(text + generate)
+    # print("glm130b", text_res)
+    return text_res
+
+
+async def generate_plm(prompt="", limit=30, url=None, model="glm"):
     if url is None:
         url = CONFIG.default_plm_api
     if model == "glm":
@@ -40,11 +78,10 @@ async def generate_plm(prompt="", limit=30, url=None,model="glm"):
     payload = {"query": prompt, "limit": limit}
 
     if model == "glm_130b":
-        url = "http://103.238.162.37:9622/general"
-        payload = {"contexts": [prompt]}
+        # url = "http://103.238.162.37:9622/general"
+        # payload = {"contexts": [prompt]}
+        return test130b([prompt])
     res = await api_async(url=url, payload=payload)
-    if model == "glm_130b":
-        return res
     if res.get("code") != 0:
         return False
     result = res.get("data")
@@ -61,7 +98,7 @@ async def getGeneratedText(prompt=[], limit=30, batchsize=1, model="ctxl"):
         assert len(limits) == len(prompt)
 
     tasks = [
-        asyncio.create_task(generate_plm(prompt=p, limit=l,model=model))
+        asyncio.create_task(generate_plm(prompt=p, limit=l, model=model))
         for p, l in zip(prompt, limits)
     ]
     done, pending = await asyncio.wait(tasks, timeout=15)

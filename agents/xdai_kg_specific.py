@@ -61,7 +61,7 @@ class ChatAgent_SP(AgentBase):
             reply = ""
             if self.model == "glm":
                 for text in raw_generated_contents:
-                    reply = filter_glm(text, split="|", prefix=f"({self.botname}:|{self.username}:)")
+                    reply = filter_glm(text + "|A:不知道", split="|", prefix=f"({self.botname}:|{self.username}:)")
             else:
                 # glm-130b
                 for text in raw_generated_contents:

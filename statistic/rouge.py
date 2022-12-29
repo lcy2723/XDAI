@@ -8,7 +8,7 @@ def prepare_args():
     parser = argparse.ArgumentParser(description='Draw statistics for complex QA on xiaomu')
     parser.add_argument('--data_dir', help='Where to load', default='/data/tsq/xiaomu/qa/')
     parser.add_argument('--models', help='model to load',
-                        default=['cpm2', 'glm', 'glm130b_base', 'gpt3', 'xiaoshih', 'dpr', 'bm25'])
+                        default=['cpm2', 'glm', 'glm130b_base', 'gpt3', 'xiaoshih', 'dpr', 'bm25', 'rule', 'xiaomu10b'])
     # task
     parser.add_argument('--score_key', type=str, default='f',
                         choices=['r', 'p', 'f'])
@@ -53,6 +53,7 @@ def output_table(args):
         df = pd.read_csv(csv_path, delimiter='|')
         assert len(labels) == len(df['rouge-1'])
         data_num = len(labels)
+        print(data_num)
         simple_res = {
             "r1": [],
             "r2": [],

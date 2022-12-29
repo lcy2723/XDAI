@@ -65,7 +65,7 @@ class DataProcessor(object):
         return input_ids, input_masks, input_segments
 
     def process_ans(self, _answer):
-        max_ans_len = self.max_sequence_length // self.max_history_turns
+        max_ans_len = self.max_sequence_length // max(self.max_history_turns, 1)
         # filter some html tags
         if type(_answer) != str:
             print("process_ans")
@@ -82,10 +82,11 @@ class DataProcessor(object):
             history = f"当前的课程是{course_name}，有同学问"
         else:
             history = "在一个慕课网站上，有同学问"
-        for qa_pair in session_qa_lst[-self.max_history_turns:]:
-            history += f"|Q:{qa_pair[0]}"
-            if self.use_history_answer:
-                history += f"|A:{qa_pair[1]}"
+        if self.max_history_turns > 0:
+            for qa_pair in session_qa_lst[-self.max_history_turns:]:
+                history += f"|Q:{qa_pair[0]}"
+                if self.use_history_answer:
+                    history += f"|A:{qa_pair[1]}"
 
         return history
 
@@ -136,7 +137,10 @@ class DataProcessor(object):
         labels = df_train['问题类型']
         id_labels = []
         for label in tqdm(labels):
-            id_label = self.label2id[label]
+            if type(label) != int:
+                id_label = self.label2id[label]
+            else:
+                id_label = label
             id_labels.append(id_label)
         # return torch.tensor(np.array(id_labels)).unsqueeze(1)
         return torch.tensor(np.array(id_labels))
