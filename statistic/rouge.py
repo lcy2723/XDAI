@@ -8,7 +8,10 @@ def prepare_args():
     parser = argparse.ArgumentParser(description='Draw statistics for complex QA on xiaomu')
     parser.add_argument('--data_dir', help='Where to load', default='/data/tsq/xiaomu/qa/')
     parser.add_argument('--models', help='model to load',
-                        default=['cpm2', 'glm', 'glm130b_base', 'gpt3', 'xiaoshih', 'dpr', 'bm25', 'rule', 'xiaomu10b'])
+                        default=['cpm2', 'glm', 'glm130b_base', 'gpt3', 'xiaoshih', 'dpr', 'bm25', 'rule', 'xiaomu10B',
+                                 'xiaomu130B'])
+    parser.add_argument('--scope', type=str, default='all',
+                        choices=['all', 'cot'])
     # task
     parser.add_argument('--score_key', type=str, default='f',
                         choices=['r', 'p', 'f'])
@@ -37,20 +40,35 @@ def get_table_row(avg_simple_res, avg_complex_res, avg_all_res):
 
 
 def output_table(args):
+    complex_qa_path = f"/data/tsq/xiaomu/dump/qa_test/complex_xiaomu130B.csv"
+    cot_df = pd.read_csv(complex_qa_path)
+    ids = []
+    for i in zip(cot_df['id']):
+        ids.append(i[0])
     # get simple and complex label
     data_path = '/home/tsq/user/lcy/RocketQA/问题答案标注.xlsx'
     raw_data = pd.read_excel(data_path, sheet_name='Sheet1')
+    _ids = raw_data['id']
     _labels = raw_data['问题类型']
     answers = raw_data['答案']
     labels = []
-    for label, a in zip(_labels, answers):
+    locs = []
+    for loc, pack in enumerate(zip(_ids, _labels, answers)):
+        _id, label, a = pack
+        if args.scope == 'cot':
+            if label == '复杂问题':
+                if _id not in ids:
+                    continue
         if a != 'cannot_answer':
+            locs.append(len(labels))
             labels.append(label)
     # simple r1/2/l, complex r1/2/l, all r1/2/l
     model2average = {}
     for model in args.models:
         csv_path = os.path.join(args.data_dir, f"scores_of_{model}.csv")
         df = pd.read_csv(csv_path, delimiter='|')
+        if args.scope == 'cot':
+            df = df.iloc[locs]
         assert len(labels) == len(df['rouge-1'])
         data_num = len(labels)
         print(data_num)

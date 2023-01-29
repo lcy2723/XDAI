@@ -64,7 +64,7 @@ def test130b(texts, strategy="BaseStrategy", stop=[], regix=""):
         if "MASK" in text:
             text_res.append(text.replace("[gMASK]", "[[gMASK]]" + generate).replace("[MASK]", generate))
         else:
-            text_res.append(text + generate)
+            text_res.append(text + "[[gMASK]]" + generate)
     # print("glm130b", text_res)
     return text_res
 
