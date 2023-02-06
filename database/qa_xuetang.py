@@ -5,12 +5,15 @@ import random
 import pandas as pd
 from tqdm import tqdm
 
+middle_time = "2022-09-15"
+
 
 def observe(args, results):
     num_meaningful_questions = 0
     num_new_answer = 0
     num_kg = 0
     num_good_ans = 0
+    num_query_late = 0
     csv_results = []
     for i, result in enumerate(results):
         question = result[1]
@@ -24,6 +27,7 @@ def observe(args, results):
         new_answer = result[9]
         create_time = result[10]
         chat_id = result[11]
+        user_id = result[12]
         if args.specific_id:
             if args.specific_id == int(result[0]):
                 print(
@@ -31,11 +35,17 @@ def observe(args, results):
         else:
             if i < args.show_num:
                 print(f"Q:{question},A:{answer},C:{course_name},S:{source},意义:{sense_commit},New:{new_answer}")
+                print(f"time:{create_time}")
                 print("#" * 6)
+
+        if create_time > middle_time:
+            num_query_late += 1
+            print(create_time)
         csv_results.append({"question": question, "answer": answer, "course_name": course_name,
                             "source": source, "sense_commit": sense_commit, "label_used": label_used,
                             "type_belong": type_belong, "answer_commit": answer_commit,
-                            "new_answer": new_answer, "create_time": create_time, "session_id": chat_id})
+                            "new_answer": new_answer, "create_time": create_time, "session_id": chat_id,
+                            "user_id": user_id})
         if sense_commit == "有意义":
             num_meaningful_questions += 1
         if type_belong == '知识图谱点击':
@@ -48,6 +58,7 @@ def observe(args, results):
     print(f"有新答案的问题有{num_new_answer}个,无新答案的回答有{len(results) - num_new_answer}个")
     print(f"好答案的问题有{num_good_ans}个,回答不好的有{len(results) - num_good_ans}个")
     print(f"知识图谱点击的问题有{num_kg}个")
+    print(f"在{middle_time}之后的问题有{num_query_late}个")
     df = pd.DataFrame(csv_results)
     df.to_csv(os.path.join(args.data_dir, f'qa_history_{args.size}.csv'))
 
